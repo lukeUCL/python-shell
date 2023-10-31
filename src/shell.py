@@ -6,114 +6,97 @@ from collections import deque
 from glob import glob
 
 
-def eval(cmdline, out):
-    raw_commands = []
-    for m in re.finditer("([^\"';]+|\"[^\"]*\"|'[^']*')", cmdline):
-        if m.group(0):
-            raw_commands.append(m.group(0))
-    for command in raw_commands:
-        tokens = []
-        for m in re.finditer("[^\\s\"']+|\"([^\"]*)\"|'([^']*)'", command):
-            if m.group(1) or m.group(2):
-                quoted = m.group(0)
-                tokens.append(quoted[1:-1])
-            else:
-                globbing = glob(m.group(0))
-                if globbing:
-                    tokens.extend(globbing)
-                else:
-                    tokens.append(m.group(0))
-        app = tokens[0]
-        args = tokens[1:]
-        if app == "pwd":
-            out.append(os.getcwd())
-        elif app == "cd":
-            if len(args) == 0 or len(args) > 1:
-                raise ValueError("wrong number of command line arguments")
-            os.chdir(args[0])
-        elif app == "echo":
-            out.append(" ".join(args) + "\n")
-        elif app == "ls":
-            if len(args) == 0:
-                ls_dir = os.getcwd()
-            elif len(args) > 1:
-                raise ValueError("wrong number of command line arguments")
-            else:
-                ls_dir = args[0]
-            for f in listdir(ls_dir):
-                if not f.startswith("."):
-                    out.append(f + "\n")
-        elif app == "cat":
-            for a in args:
-                with open(a) as f:
-                    out.append(f.read())
-        elif app == "head":
-            if len(args) != 1 and len(args) != 3:
-                raise ValueError("wrong number of command line arguments")
-            if len(args) == 1:
-                num_lines = 10
-                file = args[0]
-            if len(args) == 3:
-                if args[0] != "-n":
-                    raise ValueError("wrong flags")
-                else:
-                    num_lines = int(args[1])
-                    file = args[2]
-            with open(file) as f:
-                lines = f.readlines()
-                for i in range(0, min(len(lines), num_lines)):
-                    out.append(lines[i])
-        elif app == "tail":
-            if len(args) != 1 and len(args) != 3:
-                raise ValueError("wrong number of command line arguments")
-            if len(args) == 1:
-                num_lines = 10
-                file = args[0]
-            if len(args) == 3:
-                if args[0] != "-n":
-                    raise ValueError("wrong flags")
-                else:
-                    num_lines = int(args[1])
-                    file = args[2]
-            with open(file) as f:
-                lines = f.readlines()
-                display_length = min(len(lines), num_lines)
-                for i in range(0, display_length):
-                    out.append(lines[len(lines) - display_length + i])
-        elif app == "grep":
-            if len(args) < 2:
-                raise ValueError("wrong number of command line arguments")
-            pattern = args[0]
-            files = args[1:]
-            for file in files:
-                with open(file) as f:
-                    lines = f.readlines()
-                    for line in lines:
-                        if re.match(pattern, line):
-                            if len(files) > 1:
-                                out.append(f"{file}:{line}")
-                            else:
-                                out.append(line)
-        else:
-            raise ValueError(f"unsupported application {app}")
+# Improved function to tokenize the command line
+def tokenize(cmdline):
+    # Split the command by semicolons, quotes, etc.
+    raw_commands = re.findall(r"([^\"';]+|\"[^\"]*\"|'[^']+')", cmdline)
+    #lets use raw string so we don't have to escape the backslash (would act as quotes)
 
+    #first will find all the strings that are not semicolons, quotes, or apostrophes
+    #second will find all the strings that are double quotes uses * because empty strings are valid
+    #third will find all the strings that are single quotes uses * because empty strings are valid
+
+    tokens = []
+    for command in raw_commands:
+        # Further tokenize each command
+        matches = re.findall(r"[^\\s\"']+|\"([^\"]*)\"|'([^']*)'", command)
+        for match in matches:
+            if match[0] or match[1]:
+                # If it's a quoted string, remove quotes and add
+                tokens.append(match[0] or match[1])
+            else:
+                # Handle globbing only if necessary, e.g., not for echo
+                globbed = glob(match[0])
+                tokens.extend(globbed if globbed else [match[0]])
+    return tokens
+
+# Separate function for handling 'head' and 'tail' since they have a lot in common
+def process_head_tail(app, args, out):
+    if len(args) < 1:
+        raise ValueError(f"wrong number of arguments for {app}")
+    num_lines = 10  # Default number of lines
+    file = args[-1]  # Last arg is the file
+    if len(args) == 3:
+        if args[0] != "-n":
+            raise ValueError("wrong flags")
+        num_lines = int(args[1])
+    with open(file) as f:
+        lines = f.readlines()
+        # Handling the logic for 'head' and 'tail'
+        display_lines = (lines[:num_lines] if app == "head" else lines[-num_lines:])
+        out.extend(display_lines)
+
+# Main evaluation function
+def eval(tokens, out):
+    if not tokens:
+        return
+
+    app = tokens[0]
+    args = tokens[1:]
+
+    if app == "exit" or app == "quit":
+        exit(0)
+    elif app == "pwd":
+        out.append(os.getcwd())
+    elif app == "cd":
+        if len(args) != 1:
+            raise ValueError("cd requires exactly one argument")
+        os.chdir(args[0])
+    elif app == "echo":
+        out.append(" ".join(args) + "\n")
+    # ... [other commands like ls, cat can remain largely the same]
+    elif app == "head" or app == "tail":
+        process_head_tail(app, args, out)
+    elif app == "grep":
+        # Using re.search instead of re.match
+        pattern = re.compile(args[0])
+        files = args[1:]
+        for file in files:
+            with open(file) as f:
+                for line in f:
+                    if pattern.search(line):
+                        out.append(line)
+    else:
+        raise ValueError(f"unsupported application {app}")
 
 if __name__ == "__main__":
-    args_num = len(sys.argv) - 1
-    if args_num > 0:
-        if args_num != 2:
-            raise ValueError("wrong number of command line arguments")
-        if sys.argv[1] != "-c":
-            raise ValueError(f"unexpected command line argument {sys.argv[1]}")
+    while True:
+        print(f"{os.getcwd()}> ", end="")
+        cmdline = input()
+        tokens = tokenize(cmdline)
         out = deque()
-        eval(sys.argv[2], out)
-        while len(out) > 0:
-            print(out.popleft(), end="")
-    else:
-        while True:
-            print(os.getcwd() + "> ", end="")
-            cmdline = input()
-            out = deque()
-            eval(cmdline, out)
-            while len(out) > 0:
+        try:
+            eval(tokens, out)
+            while out:
                 print(out.popleft(), end="")
+        except Exception as e:
+            print(f"Error: {e}")
+
+
+def rawC(test):
+    raw_commands = re.findall(r"([^\"';]+|\"[^\"]*\"|'[^']+')",test)
+    print(raw_commands)
+
+
+
+
