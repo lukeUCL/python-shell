@@ -83,6 +83,35 @@ def grep(out, args):
                     else:
                         out.append(line)
 #to implement find, cut, uniq, sort.
+def find(out, args):
+    options = ["-exec", "-ok", "-inium", "-links", "-name", "-newer", "-perm",
+                "-print", "empty", "-size", "-user", "\(expr\)", "/;"]
+    commands = []
+    if len(args) < 2 or args[i][:2] != "./":
+        raise ValueError("wrong number of command line arguments")
+    for i in range(1, len(args), 2):
+        if args[i] not in options:
+            raise ValueError("syntax error")
+        else:
+            try:
+                commands.append([args[i], args[i+1]])
+            except:
+                raise ValueError("syntax error")
+    #implement the functionality
+    directory = args[0][2:]
+
+
+
+    
+
+def cut(out, args):
+    pass
+
+def uniq(out, args):
+    pass
+
+def sort(out, args):
+    pass
 
 def apps(app, args, out):
     if app == "pwd":
@@ -101,5 +130,13 @@ def apps(app, args, out):
         tail(out, args)
     elif app == "grep":
         grep(out, args)
+    elif app == "find":
+        find(out, args)
+    elif app == "cut":
+        cut(out, args)
+    elif app == "uniq":
+        uniq(out, args)
+    elif app == "sort":
+        sort(out, args)
     else:
         raise ValueError(f"unsupported application {app}")
