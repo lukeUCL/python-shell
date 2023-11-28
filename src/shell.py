@@ -2,7 +2,6 @@
 from antlr4 import InputStream, CommonTokenStream
 from collections import deque
 
-# Assuming ShellLexer and ShellParser are the ANTLR generated classes for your language
 from PARSER.ShellLexer import ShellLexer
 from PARSER.ShellParser import ShellParser
 from parseTreeFlattener import parseTreeFlattener
@@ -21,8 +20,8 @@ def execute_command(input_command):
     visitor = parseTreeFlattener()
     command_structure = visitor.visit(parse_tree)
 
-    # Execute the command structure using your apps
+    #pass flattened to commands where we will pass args to apps..?
+
     output = deque()
 
-    #pass flattened to commands where we will pass args to apps..?
 
