@@ -1,0 +1,17 @@
+LT=1
+GT=2
+SINGLE_QUOTE=3
+DOUBLE_QUOTE=4
+BACK_QUOTE=5
+UNQUOTED=6
+WS=7
+NEWLINE=8
+PIPE=9
+SEMI=10
+'<'=1
+'>'=2
+'\''=3
+'"'=4
+'`'=5
+'|'=9
+';'=10

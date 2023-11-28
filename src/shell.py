@@ -1,49 +1,62 @@
-import re
-import sys
-import os
-from os import listdir
+# Let's define a function that will take the input command as a string,
+# parse it, flatten the parse tree, and then execute the corresponding apps.
+
+from antlr4 import InputStream, CommonTokenStream
 from collections import deque
-from glob import glob
-from apps import *
 
-def eval(cmdline, out):
-    raw_commands = []
-    for m in re.finditer("([^\"';]+|\"[^\"]*\"|'[^']*')", cmdline):
-        if m.group(0):
-            raw_commands.append(m.group(0))
-    for command in raw_commands:
-        tokens = []
-        for m in re.finditer("[^\\s\"']+|\"([^\"]*)\"|'([^']*)'", command):
-            if m.group(1) or m.group(2):
-                quoted = m.group(0)
-                tokens.append(quoted[1:-1])
-            else:
-                globbing = glob(m.group(0))
-                if globbing:
-                    tokens.extend(globbing)
-                else:
-                    tokens.append(m.group(0))
-        app = tokens[0]
-        args = tokens[1:]
-        apps(app, args, out)
+# Assuming ShellLexer and ShellParser are the ANTLR generated classes for your language
+from PARSER.ShellLexer import ShellLexer
+from PARSER.ShellParser import ShellParser
+# Assuming parseTreeFlattener is your custom class that extends ShellParserVisitor
+from parseTreeFlattener import parseTreeFlattener
 
-if __name__ == "__main__":
-    args_num = len(sys.argv) - 1
-    if args_num > 0:
-        if args_num != 2:
-            raise ValueError("wrong number of command line arguments")
-        if sys.argv[1] != "-c":
-            raise ValueError(f"unexpected command line argument {sys.argv[1]}")
-        out = deque()
-        eval(sys.argv[2], out)
-        while len(out) > 0:
-            print(out.popleft(), end="")
+# The apps functions are assumed to be defined in a separate file named 'apps.py'
+from src.applications import *
+
+def execute_command(input_command):
+    # Parse the command
+    input_stream = InputStream(input_command)
+    lexer = ShellLexer(input_stream)
+    token_stream = CommonTokenStream(lexer)
+    parser = ShellParser(token_stream)
+    parse_tree = parser.command()
+
+    # Flatten the parse tree
+    visitor = parseTreeFlattener()
+    command_structure = visitor.visit(parse_tree)
+
+    # Execute the command structure using your apps
+    output = deque()
+
+    # Determine if it's a pipe command and handle it accordingly
+    if isinstance(command_structure[0], list) and command_structure[0][0] == 'pipe':
+        pass
+        # Extract the commands from the structure
+        commands = command_structure[1:]
+        # Execute the pipeline
+        for cmd in commands:
+            app_name = cmd[0]
+            app_args = cmd[1]
+            apps(app_name, app_args, output)
+    elif isinstance(command_structure[0], list) and command_structure[0][0] == 'seq':
+        pass
+        # Execute a sequence of commands
+        commands = command_structure[1:]
+        for cmd in commands:
+            app_name = cmd[0]
+            app_args = cmd[1]
+            apps(app_name, app_args, output)
     else:
-        while True:
-            print(os.getcwd() + "> ", end="")
-            cmdline = input()
-            out = deque()
-            eval(cmdline, out)
-            while len(out) > 0:
-                print(out.popleft(), end="")
+        # It's a single command
+        app_name = command_structure[0]
+        app_args = command_structure[1:]
+        apps(app_name, app_args, output)
+
+    # Return the output from the command execution
+    return list(output)
+
+# Example usage
+user_input = "ls | grep py"
+execution_output = execute_command(user_input)
+print(execution_output)
 

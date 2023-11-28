@@ -80,7 +80,37 @@ Step 1 uses the following grammar:
 
 A non-keyword character is any character except for newlines, single quotes, double quotes, backquotes, semicolons `;` and vertical bars `|`. The non-terminal `<quoted>` is described below.
 
-## Quoting
+## Quotingdef visitCallCommand(self, ctx:ShellParser.CallCommandContext):
+    # The first child is the command
+    command = ctx.getChild(0).getText()
+    
+    # The rest are arguments
+    arguments = [self.visit(child) for child in ctx.getChildren()][1:]
+    
+    # Remove empty strings which might be caused by spaces or other delimiters
+    arguments = [arg for arg in arguments if arg]
+    
+    return [command, arguments]def visitCallCommand(self, ctx:ShellParser.CallCommandContext):
+    # The first child is the command
+    command = ctx.getChild(0).getText()
+    
+    # The rest are arguments
+    arguments = [self.visit(child) for child in ctx.getChildren()][1:]
+    
+    # Remove empty strings which might be caused by spaces or other delimiters
+    arguments = [arg for arg in arguments if arg]def visitCallCommand(self, ctx:ShellParser.CallCommandContext):
+    # The first child is the command
+    command = ctx.getChild(0).getText()
+    
+    # The rest are arguments
+    arguments = [self.visit(child) for child in ctx.getChildren()][1:]
+    
+    # Remove empty strings which might be caused by spaces or other delimiters
+    arguments = [arg for arg in arguments if arg]
+    
+    return [command, arguments]
+    
+    return [command, arguments]
 
 [Quoting](https://www.gnu.org/software/bash/manual/html_node/Quoting.html) is used to remove the special meaning of certain characters or words to the shell.
 
