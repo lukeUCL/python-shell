@@ -31,7 +31,7 @@ class TestShellVisitor(unittest.TestCase):
         parse_tree = parse_command(input_command) 
         visitor = parseTreeFlattener()
         result = visitor.visit(parse_tree)
-        expected = [['cd', 'folder'], ['ls'], ['pwd']]
+        expected = ['seq', ['cd', ['folder']], ['ls', []], ['pwd', []]]
         self.assertEqual(result, expected)
 
     #flag for commands?? maybe not effective 
@@ -40,7 +40,7 @@ class TestShellVisitor(unittest.TestCase):
         parse_tree = parse_command(input_command)  
         visitor = parseTreeFlattener()
         result = visitor.visit(parse_tree)  
-        expected = [['cat', 'file.txt'], ['grep', 'pattern'], ['sort']]
+        expected = ['pipe', ['cat', ['file.txt']], ['grep', ['pattern']], ['sort', []]]
         self.assertEqual(result, expected)
 
     def test_command_with_arguments(self):
@@ -50,7 +50,8 @@ class TestShellVisitor(unittest.TestCase):
         result = visitor.visit(parse_tree)
         # command_name = result[0][0]
         # arguments = result[0][1:]
-        self.assertEqual(result, ['grep' ['pattern', 'file.txt']])
+        expected=['grep' ,['pattern', 'file.txt']]
+        self.assertEqual(result,expected)
     
     def test_single_quoted_argument(self):
         input_command = "echo 'Hello World'"
