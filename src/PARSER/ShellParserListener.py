@@ -53,6 +53,15 @@ class ShellParserListener(ParseTreeListener):
         pass
 
 
+    # Enter a parse tree produced by ShellParser#concatArg.
+    def enterConcatArg(self, ctx:ShellParser.ConcatArgContext):
+        pass
+
+    # Exit a parse tree produced by ShellParser#concatArg.
+    def exitConcatArg(self, ctx:ShellParser.ConcatArgContext):
+        pass
+
+
     # Enter a parse tree produced by ShellParser#redirection.
     def enterRedirection(self, ctx:ShellParser.RedirectionContext):
         pass

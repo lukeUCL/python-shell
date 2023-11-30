@@ -3,7 +3,6 @@ parser grammar ShellParser;
 options {
   tokenVocab=ShellLexer;
 }
-
 command
  : seqCommand
  | pipeCommand
@@ -11,13 +10,12 @@ command
  ;
 
 seqCommand
- : callCommand SEMI seqCommand   // Recursively allow more sequential commands
- | callCommand SEMI callCommand  // Base case for two sequential commands
- ;
+ : callCommand SEMI seqCommand   
+ | callCommand SEMI callCommand           
 
 pipeCommand
- : callCommand PIPE pipeCommand  // Recursively allow more piped commands
- | callCommand PIPE callCommand  // Base case for two piped commands
+ : callCommand PIPE pipeCommand 
+ | callCommand PIPE callCommand  
  ;
 
 callCommand
@@ -25,8 +23,13 @@ callCommand
  ;
 
 argument
- : quoted
+ : CONCAT_ARG
+ | quoted
  | UNQUOTED
+ ;
+
+  concatArg
+ : CONCAT_ARG
  ;
 
 redirection
@@ -39,11 +42,11 @@ quoted
  ;
 
 singleQuoted
- : SINGLE_QUOTE .*? SINGLE_QUOTE
+ : SINGLE_QUOTED_TEXT
  ;
 
 doubleQuoted
- : DOUBLE_QUOTE .*? DOUBLE_QUOTE
+ : DOUBLE_QUOTED_TEXT
  ;
 
 commandSubstitution
@@ -53,4 +56,3 @@ commandSubstitution
 innerCommand
  : callCommand
  ;
-
