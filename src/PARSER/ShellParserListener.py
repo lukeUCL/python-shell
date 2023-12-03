@@ -35,12 +35,30 @@ class ShellParserListener(ParseTreeListener):
         pass
 
 
+    # Enter a parse tree produced by ShellParser#seqPipeCommand.
+    def enterSeqPipeCommand(self, ctx:ShellParser.SeqPipeCommandContext):
+        pass
+
+    # Exit a parse tree produced by ShellParser#seqPipeCommand.
+    def exitSeqPipeCommand(self, ctx:ShellParser.SeqPipeCommandContext):
+        pass
+
+
     # Enter a parse tree produced by ShellParser#callCommand.
     def enterCallCommand(self, ctx:ShellParser.CallCommandContext):
         pass
 
     # Exit a parse tree produced by ShellParser#callCommand.
     def exitCallCommand(self, ctx:ShellParser.CallCommandContext):
+        pass
+
+
+    # Enter a parse tree produced by ShellParser#redirection.
+    def enterRedirection(self, ctx:ShellParser.RedirectionContext):
+        pass
+
+    # Exit a parse tree produced by ShellParser#redirection.
+    def exitRedirection(self, ctx:ShellParser.RedirectionContext):
         pass
 
 
@@ -59,15 +77,6 @@ class ShellParserListener(ParseTreeListener):
 
     # Exit a parse tree produced by ShellParser#concatArg.
     def exitConcatArg(self, ctx:ShellParser.ConcatArgContext):
-        pass
-
-
-    # Enter a parse tree produced by ShellParser#redirection.
-    def enterRedirection(self, ctx:ShellParser.RedirectionContext):
-        pass
-
-    # Exit a parse tree produced by ShellParser#redirection.
-    def exitRedirection(self, ctx:ShellParser.RedirectionContext):
         pass
 
 

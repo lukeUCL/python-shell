@@ -46,6 +46,8 @@ def cat(out, args, pipe= False):
     for a in args:
         with open(a) as f:
             out.append(f.read())
+    
+    return out
 
 def head(out, args, pipe= False):
     if len(args) != 1 and len(args) != 3:
@@ -148,6 +150,21 @@ def find(out, args):#prints the path to the file
                     subdirectories.append(os.getcwd + f)       
     os.chdir(initial_dir)
 
+# class SeqCommand(Command):
+#     """
+#     Sequence command: Executes a series of commands in sequence.
+#     """
+
+#     def execute(self, args, output):
+#         # 'args' should be a list of command strings to be executed in sequence.
+#         for arg in args:
+#             # Split the command string into the app name and its arguments
+#             tokens = arg.split()
+#             app = tokens[0]
+#             app_args = tokens[1:]
+
+#             # Call the appropriate application from the 'apps' module
+#             apps(app, app_args, output)
 
     
 
@@ -183,10 +200,6 @@ def uniq(out, args):
         out.append(temp)
     if line not in out and line is not None:
         out.append(line)
-
-                
-
-            
 
 def cut(out, args):
     if len(args) < 3:

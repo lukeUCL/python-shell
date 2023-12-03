@@ -3,23 +3,39 @@ parser grammar ShellParser;
 options {
   tokenVocab=ShellLexer;
 }
+
 command
- : seqCommand
+ : seqPipeCommand
+ | seqCommand
  | pipeCommand
  | callCommand
  ;
 
 seqCommand
- : callCommand SEMI seqCommand   
- | callCommand SEMI callCommand           
+ : callCommand SEMI seqCommand
+ | callCommand SEMI callCommand
+ ;
 
 pipeCommand
- : callCommand PIPE pipeCommand 
- | callCommand PIPE callCommand  
+ : callCommand PIPE pipeCommand
+ | callCommand PIPE callCommand
+ ;
+
+seqPipeCommand
+ : seqCommand PIPE seqCommand
+ | pipeCommand SEMI pipeCommand
+ | seqCommand PIPE callCommand
+ | callCommand PIPE seqCommand
+ | pipeCommand SEMI callCommand
+ | callCommand SEMI pipeCommand
  ;
 
 callCommand
  : (argument | redirection | commandSubstitution)+
+ ;
+ 
+redirection
+ : (LT | GT) argument
  ;
 
 argument
@@ -28,12 +44,8 @@ argument
  | UNQUOTED
  ;
 
-  concatArg
+concatArg
  : CONCAT_ARG
- ;
-
-redirection
- : (LT | GT) argument
  ;
 
 quoted

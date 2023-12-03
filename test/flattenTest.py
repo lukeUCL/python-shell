@@ -9,7 +9,7 @@ sys.path.append('/Users/lukemciver/softwareEng/src/parserTreeFlattener')
 
 from antlr4 import InputStream, CommonTokenStream
 
-from src.PARSER.ShellLexer import ShellLexer
+from src.PARSER.ShellLexer import shellLexer
 from src.PARSER.ShellParser import ShellParser
 from src.PARSER.ShellParserVisitor import ShellParserVisitor
 from src.parseTreeFlattener import parseTreeFlattener
@@ -17,7 +17,7 @@ import unittest
 
 def parse_command(input_command):
     input_stream = InputStream(input_command)
-    lexer = ShellLexer(input_stream)
+    lexer = shellLexer(input_stream)
     token_stream = CommonTokenStream(lexer)
     parser = ShellParser(token_stream)
     parse_tree = parser.command()
@@ -25,7 +25,7 @@ def parse_command(input_command):
 
 
 class TestShellVisitor(unittest.TestCase):
-    #teste case should adjust
+    # teste case should adjust
     def test_flatten_seq_commands(self):
         input_command = "cd folder; ls; pwd"
         parse_tree = parse_command(input_command) 
@@ -58,7 +58,7 @@ class TestShellVisitor(unittest.TestCase):
         parse_tree = parse_command(input_command)
         visitor = parseTreeFlattener()
         result = visitor.visit(parse_tree)
-        expected = ['echo', ['Hello',  'World']] 
+        expected = ['echo', ['Hello World']] 
         self.assertEqual(result, expected)
 
     def test_double_quoted_argument_with_command_substitution(self):
@@ -68,8 +68,116 @@ class TestShellVisitor(unittest.TestCase):
         result = visitor.visit(parse_tree)
         expected = ['echo', ['a']]  
         self.assertEqual(result, expected)
+    
+    def test_flatten_grep_command(self):
+        input_command = "grep 'myPattern' anotherfile.txt"
+        parse_tree = parse_command(input_command)
+        visitor = parseTreeFlattener()
+        result = visitor.visit(parse_tree)
+        expected = ['grep', ['myPattern', 'anotherfile.txt']]
+        self.assertEqual(result, expected)
+    
+    def test_flatten_grep_command(self):
+        input_command = "grep 'myPattern' anotherfile.txt"
+        parse_tree = parse_command(input_command)
+        visitor = parseTreeFlattener()
+        result = visitor.visit(parse_tree)
+        expected = ['grep', ['myPattern', 'anotherfile.txt']]
+        self.assertEqual(result, expected)
+
+    def nested_quotes(self):
+        input_command = "echo 'nested \"test\" testing' "
+        parse_tree = parse_command(input_command)
+        visitor = parseTreeFlattener()
+        result = visitor.visit(parse_tree)
+        expected = ['echo', ['nested \"test\" testing' ]]
+        self.assertEqual(result, expected)
 
 
-# Run the tests
+    def test_flatten_nested_doublequotes(self):
+        input_command = 'echo "a `echo "b"`"'
+        parse_tree = parse_command(input_command)
+        visitor = parseTreeFlattener()
+        result = visitor.visit(parse_tree)
+        expected = ['echo', ['a `echo "b"`']] 
+        self.assertEqual(result, expected)
+
+    def test_flatten_disabled_doublequotes(self):
+        input_command = "echo '\"\"'"
+        parse_tree = parse_command(input_command)
+        visitor = parseTreeFlattener()
+        result = visitor.visit(parse_tree)
+        expected = ['echo', ['\"\"']]  
+        self.assertEqual(result, expected)
+
+    def test_flatten_input_redirection_infront(self):
+        input_command = "< dir1/file2.txt cat"
+        parse_tree = parse_command(input_command)
+        visitor = parseTreeFlattener()
+        result = visitor.visit(parse_tree)
+        expected = ['<', ['dir1/file2.txt', 'cat']] 
+        self.assertEqual(result, expected)
+
+    def test_flatten_splitting(self):
+        input_command = 'echo a"b"c'
+        parse_tree = parse_command(input_command)
+        visitor = parseTreeFlattener()
+        result = visitor.visit(parse_tree)
+        expected = ['echo', ['abc']]  
+        self.assertEqual(result, expected)
+    
+    def test_flatten_output_redirection(self):
+        input_command = "echo foo > newfile.txt"
+        parse_tree = parse_command(input_command)
+        visitor = parseTreeFlattener()
+        result = visitor.visit(parse_tree)
+        expected = ['echo', ['foo', '>', 'newfile.txt']] 
+        self.assertEqual(result, expected)
+
+    def test_idk(self):
+        input_command = 'echo \"\'test\'\"'
+        parse_tree = parse_command(input_command)
+        visitor = parseTreeFlattener()
+        result = visitor.visit(parse_tree)
+        expected = ['echo', ['foo', '>', 'newfile.txt']] 
+        self.assertEqual(result, expected)
+
+    def test_nested_doublequotes(self):
+        input_command = "echo aaa > dir1/file2.txt; cat dir1/file1.txt dir1/file2.txt | uniq -i"
+        parse_tree = parse_command(input_command)
+        visitor = parseTreeFlattener()
+        result = visitor.visit(parse_tree)
+        print(result)
+        expected = ['echo', ["a"]] 
+        self.assertEqual(result, expected)
+
+    def test_pseq(self):
+        input_command = "echo aaa | echo bbb | echo ccc ; echo ddd"
+        parse_tree = parse_command(input_command)
+        visitor = parseTreeFlattener()
+        result = visitor.visit(parse_tree)
+        print(result)
+        expected = ['echo', ["a"]]  
+        self.assertEqual(result, expected)
+
+
+
+
+# input_command =  "< dir1/file2.txt cat"
+
+# parse_tree = parse_command(input_command)
+# # (command (callCommand (argument echo) (argument (quoted (singleQuoted ' hello world ')))))
+
+# # visitor = parseTreeFlattener()
+# # result = visitor.visit(parse_tree)
+
+# lexer = shellLexer(InputStream(input_command))
+# for token in lexer.getAllTokens():
+#     token_type = lexer.symbolicNames[token.type] 
+#     print(token_type)
+#     print(token)
+# lexer.reset()  
+
+
 if __name__ == '__main__':
     unittest.main()

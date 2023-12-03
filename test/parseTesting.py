@@ -4,7 +4,7 @@ import sys
 parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(parent_dir)
 
-from src.PARSER.ShellLexer import ShellLexer
+from src.PARSER.ShellLexer import shellLexer
 from src.PARSER.ShellParser import ShellParser
 import unittest
 
@@ -12,7 +12,7 @@ from src.PARSER.ShellParserVisitor import ShellParserVisitor
 
 def parse_command(input_command):
     input_stream = InputStream(input_command)
-    lexer = ShellLexer(input_stream)
+    lexer = shellLexer(input_stream)
     token_stream = CommonTokenStream(lexer)
     parser = ShellParser(token_stream)
     parse_tree = parser.command()
@@ -76,9 +76,24 @@ class TestShellGrammar(unittest.TestCase):
 
 
     def test_command_with_whitespace(self):
-        input = "ls    -la"
+        # input = "ls    -la"
+        input = "cd folder; ls; pwd"
         expected = "(command (callCommand (argument ls) (argument -la)))"
         self.assertEqual(parse_command(input), expected)
 
+    def test_b(self):
+        # input = "ls    -la"
+        input = "echo a\"b\"c"
+        expected = "(command (callCommand (argument ls) (argument -la)))"
+        self.assertEqual(parse_command(input), expected)
+
+    def test_a(self):
+        # input = "ls    -la"
+        input = "< dir1/file2.txt cat"
+        expected = "(command (callCommand (argument ls) (argument -la)))"
+        self.assertEqual(parse_command(input), expected)
+
+
 if __name__ == '__main__':
     unittest.main()
+#- (command (callCommand (argument echo) (argument (quoted (singleQuoted ' hello world ')))))

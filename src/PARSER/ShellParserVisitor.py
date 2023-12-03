@@ -24,8 +24,18 @@ class ShellParserVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by ShellParser#seqPipeCommand.
+    def visitSeqPipeCommand(self, ctx:ShellParser.SeqPipeCommandContext):
+        return self.visitChildren(ctx)
+
+
     # Visit a parse tree produced by ShellParser#callCommand.
     def visitCallCommand(self, ctx:ShellParser.CallCommandContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by ShellParser#redirection.
+    def visitRedirection(self, ctx:ShellParser.RedirectionContext):
         return self.visitChildren(ctx)
 
 
@@ -36,11 +46,6 @@ class ShellParserVisitor(ParseTreeVisitor):
 
     # Visit a parse tree produced by ShellParser#concatArg.
     def visitConcatArg(self, ctx:ShellParser.ConcatArgContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by ShellParser#redirection.
-    def visitRedirection(self, ctx:ShellParser.RedirectionContext):
         return self.visitChildren(ctx)
 
 
