@@ -31,7 +31,7 @@ seqPipeCommand
  ;
 
 callCommand
- : (argument | redirection | commandSubstitution)+
+ : (argument | redirection | backQuoted)+
  ;
  
 redirection
@@ -42,15 +42,13 @@ argument
  : CONCAT_ARG
  | quoted
  | UNQUOTED
- ;
-
-concatArg
- : CONCAT_ARG
+ | backQuoted
  ;
 
 quoted
  : singleQuoted
  | doubleQuoted
+ | backQuoted
  ;
 
 singleQuoted
@@ -58,11 +56,11 @@ singleQuoted
  ;
 
 doubleQuoted
- : DOUBLE_QUOTED_TEXT
+ : DOUBLE_QUOTED_TEXT // This will now include double-quoted strings without command substitution
  ;
 
-commandSubstitution
- : BACK_QUOTE innerCommand BACK_QUOTE
+backQuoted
+ : BACK_QUOTED_TEXT // Match the token from the lexer
  ;
 
 innerCommand

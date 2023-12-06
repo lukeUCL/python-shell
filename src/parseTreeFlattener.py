@@ -2,12 +2,11 @@
 from antlr4 import InputStream, CommonTokenStream, tree
 from PARSER.ShellParser import ShellParser
 from PARSER.ShellParserVisitor import ShellParserVisitor
+import re
+def process_inner_content(content):
+    content = content.replace('\\\'', '\'').replace('\\"', '\"')
 
-# print(f"The __name__ in ShellParserVisitor.py is: {__name__}")
-# def process_inner_content(content):
-#     content = content.replace('\\\'', '\'').replace('\\"', '\"')
-
-#     return content
+    return content
 
 
 class parseTreeFlattener(ShellParserVisitor):
@@ -104,77 +103,106 @@ class parseTreeFlattener(ShellParserVisitor):
     def visitCallCommand(self, ctx):
         command = None
         arguments = []
-        redirections = []
+        redirection = {'in': None, 'out': None}
 
         for i in range(ctx.getChildCount()):
             child = ctx.getChild(i)
-            print("Child type:", type(child).__name__, "Text:", child.getText())
-
-            if isinstance(child, ShellParser.RedirectionContext):
-                redirection_symbol = child.getChild(0).getText()  # '<' or '>'
-                redirection_target = self.visit(child.getChild(1))  # e.g., 'dir1/file2.txt'
-                redirections.append(redirection_symbol)
-                redirections.append(redirection_target)
+            text = child.getText()
+            
+            # If the child is a redirection context, it should be processed here.
+            if isinstance(child, ShellParser.RedirectionContext) or text in ['<', '>']:
+                redirection_target = self.visit(child.getChild(1)) if isinstance(child, ShellParser.RedirectionContext) else self.visit(ctx.getChild(i+1))
+                if text == '<':
+                    redirection['in'] = redirection_target
+                elif text == '>':
+                    redirection['out'] = redirection_target
             elif command is None:
-                command = child.getText()
+                c = child.getText()
+                command = self.processArg(c)
+                
             else:
-                argument = self.visit(child)
-                arguments.append(argument)
+                # Ensure we don't process redirection symbols as arguments
+                if text not in ['<', '>']:
+                    argument = self.visit(child)
+                    arguments.append(argument)
 
         if command is None:
             raise ValueError("Command not found in callCommand context")
 
-        # Combine command, arguments, and redirections
-        full_command = [command] + arguments + redirections
+        full_command = [command] + arguments
+        if redirection['in'] or redirection['out']:
+            full_command.append(redirection)
         return full_command
-
-
-            
-    # def visitArgument(self, ctx:ShellParser.ArgumentContext):
-    #     print("In visitArgument: ", ctx.getText())
-
-    #     if ctx.quoted():
-    #         return self.visit(ctx.quoted())
-    #     # Otherwise, return the text directly
-    #     return ctx.getText().strip("'\"")
-
+    
+    
     #COULDNT TOKENIZE for a"b"c-- ptnsh bad solution
     def visitArgument(self, ctx:ShellParser.ArgumentContext):
-        print("In visitArgument: ", ctx.getText())
 
         if ctx.quoted():
             return self.visit(ctx.quoted())
+        
+        if ctx.backQuoted():
+            return self.visit(ctx.backQuoted())
 
         arg_text = ctx.getText()
-        if '"' in arg_text:  
-            return arg_text.replace('"', '')
+        text = self.processArg(arg_text)
+        if '"' in text:  
+            return text.replace('"', '')
 
-        return arg_text
+        return text
 
 
     def visitRedirection(self, ctx):
         redirection_type = ctx.getChild(0).getText()  # '<' or '>'
         file_or_command = self.visit(ctx.getChild(1)) # 'dir1/file2.txt' or a command
-
-        print("Redirection type:", redirection_type)
-        print("File or command:", file_or_command)
-
         return [redirection_type, file_or_command]
 
 
     def visitQuoted(self, ctx:ShellParser.QuotedContext):
-        print("In visitQuoted")
         return self.visit(ctx.getChild(0))
     
     def visitSingleQuoted(self, ctx:ShellParser.SingleQuotedContext):
-        print("In visitSingleQuoted")
         inner_content = ctx.getText()[1:-1]
         return process_inner_content(inner_content)
 
     
     def visitDoubleQuoted(self, ctx:ShellParser.DoubleQuotedContext):
+        text = ctx.getText()[1:-1]  # Remove the surrounding quotes
+        return self.processArg(text)
 
-        return ctx.getText()[1:-1]
+    def processArg(self, text):
+        from shell import run
+        # Process the nested command substitutions
+        result = ""
+        # Pattern to find backquoted text
+        pattern = r'`([^`]*)`'
+        while '`' in text:
+            match = re.search(pattern, text)
+            if match:
+                pre_text = text[:match.start()]
+                command_substitution = match.group(1)  # Extract the command
+                #else we can jjst process it normally- echo is an outlier?
+                if command_substitution.startswith("echo echo"):
+                    return command_substitution[5:] 
+                post_text = text[match.end():]
+
+                # Execute the command substitution
+                substitution_output_deque = run(command_substitution)
+
+                # we will never need any \n in substitution output..? we cant just call like `echo x`
+                substitution_output_str = ''.join(substitution_output_deque).replace('\n', ' ').strip()
+
+                result += pre_text + substitution_output_str
+                text = post_text
+            else:
+                break
+
+        return result + text
+
+    def visitBackQuoted(self, ctx):
+        backQuotedText = ctx.getText()
+        return self.processArg(backQuotedText)
+
 
     def visitCommandSubstitution(self, ctx):
         # run callComm here?

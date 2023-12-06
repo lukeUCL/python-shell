@@ -4,6 +4,7 @@ import subprocess
 import re
 
 
+ 
 class TestShell(unittest.TestCase):
 
     SHELL_IMAGE = "comp0010-system-test"
@@ -595,3 +596,5 @@ class TestShell(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+    

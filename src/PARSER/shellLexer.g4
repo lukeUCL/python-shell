@@ -3,6 +3,7 @@ lexer grammar shellLexer;
 CONCAT_ARG : UNQUOTED DOUBLE_QUOTED_TEXT UNQUOTED 
            | UNQUOTED DOUBLE_QUOTED_TEXT 
            | DOUBLE_QUOTED_TEXT UNQUOTED 
+           | UNQUOTED BACK_QUOTED_TEXT UNQUOTED
            ;
 
 LT              : '<' ;
@@ -18,5 +19,8 @@ SEMI            : ';' ;
 
 SINGLE_QUOTED_TEXT : '\'' (~['\n\r])* '\'' ;
 //DOUBLE_QUOTED_TEXT : '"' ( ~["\r\n] | BACK_QUOTE ~[`]* BACK_QUOTE )* '"';
-DOUBLE_QUOTED_TEXT : '"' ( ESCAPE_SEQUENCE | ~["\r\n\\] )* '"';
+BACK_QUOTED_TEXT   : '`' ( ESCAPE_SEQUENCE | ~[`\\])* '`';
+DOUBLE_QUOTED_TEXT : '"' ( ESCAPE_SEQUENCE | NESTED_BACK_QUOTE | ~["\r\n\\`])* '"';
+fragment NESTED_BACK_QUOTE : BACK_QUOTE ( ESCAPE_SEQUENCE | ~[`\\])* BACK_QUOTE;
+
 fragment ESCAPE_SEQUENCE : '\\' . ;  // Handles escaped characters

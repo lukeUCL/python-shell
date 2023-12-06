@@ -71,15 +71,6 @@ class ShellParserListener(ParseTreeListener):
         pass
 
 
-    # Enter a parse tree produced by ShellParser#concatArg.
-    def enterConcatArg(self, ctx:ShellParser.ConcatArgContext):
-        pass
-
-    # Exit a parse tree produced by ShellParser#concatArg.
-    def exitConcatArg(self, ctx:ShellParser.ConcatArgContext):
-        pass
-
-
     # Enter a parse tree produced by ShellParser#quoted.
     def enterQuoted(self, ctx:ShellParser.QuotedContext):
         pass
@@ -107,12 +98,12 @@ class ShellParserListener(ParseTreeListener):
         pass
 
 
-    # Enter a parse tree produced by ShellParser#commandSubstitution.
-    def enterCommandSubstitution(self, ctx:ShellParser.CommandSubstitutionContext):
+    # Enter a parse tree produced by ShellParser#backQuoted.
+    def enterBackQuoted(self, ctx:ShellParser.BackQuotedContext):
         pass
 
-    # Exit a parse tree produced by ShellParser#commandSubstitution.
-    def exitCommandSubstitution(self, ctx:ShellParser.CommandSubstitutionContext):
+    # Exit a parse tree produced by ShellParser#backQuoted.
+    def exitBackQuoted(self, ctx:ShellParser.BackQuotedContext):
         pass
 
 

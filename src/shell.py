@@ -4,8 +4,13 @@ from PARSER.ShellLexer import shellLexer
 from PARSER.ShellParser import ShellParser
 from parseTreeFlattener import parseTreeFlattener
 from Commands import SeqCommand, PipeCommand, CallCommand
+import sys
+import os
+from os import listdir
+from collections import deque
+from glob import glob
 
-def execute_command(input_command):
+def run(input_command):
     input_stream = InputStream(input_command)
     lexer = shellLexer(input_stream)
     token_stream = CommonTokenStream(lexer)
@@ -33,16 +38,29 @@ def execute_command(input_command):
 
     return output
 
-#piping not hanlded right now...... should we put optional parameter or just force 
-# by appending args...?
-def run_test(input_command, expected_output):
-    output = execute_command(input_command)
-    print(output)
-    assert ''.join(output) == expected_output, f"Test failed for input: {input_command}"
-
-# Run tests
-run_test("echo Hello World | echo World", "Hello World\n")
-run_test("echo Hello World | grep Bye", "")
-run_test("echo Hello World | grep Hello | grep World", "Hello World\n")
-run_test("echo First > tmpfile; echo Second >> tmpfile; cat tmpfile | grep Second", "Second\n")
-run_test("echo Hello World > tmpfile; cat tmpfile | grep Hello", "Hello World\n")
+if __name__ == "__main__":
+    args_num = len(sys.argv) - 1
+    if args_num > 0:
+        if args_num != 2:
+            raise ValueError("wrong number of command line arguments")
+        if sys.argv[1] != "-c":
+            raise ValueError(f"unexpected command line argument {sys.argv[1]}")
+        output = run(sys.argv[2])
+        while len(output) > 0:
+            print(output.popleft(), end="")
+    else:
+        while True:
+            try:
+                cmdline = input(os.getcwd() + "> ")
+                if cmdline.strip() == 'exit':
+                    break
+                output = run(cmdline)
+                while len(output) > 0:
+                    print(output.popleft(), end="")
+            except KeyboardInterrupt:
+                print()  # Print a newline character
+                continue  # Go back to the beginning of the loop
+            except EOFError:
+                break  # Exit the loop on EOF
+            except Exception as e:
+                print(f"An error occurred: {e}")

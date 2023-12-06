@@ -44,11 +44,6 @@ class ShellParserVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by ShellParser#concatArg.
-    def visitConcatArg(self, ctx:ShellParser.ConcatArgContext):
-        return self.visitChildren(ctx)
-
-
     # Visit a parse tree produced by ShellParser#quoted.
     def visitQuoted(self, ctx:ShellParser.QuotedContext):
         return self.visitChildren(ctx)
@@ -64,8 +59,8 @@ class ShellParserVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by ShellParser#commandSubstitution.
-    def visitCommandSubstitution(self, ctx:ShellParser.CommandSubstitutionContext):
+    # Visit a parse tree produced by ShellParser#backQuoted.
+    def visitBackQuoted(self, ctx:ShellParser.BackQuotedContext):
         return self.visitChildren(ctx)
 
 
