@@ -52,16 +52,18 @@ class CallCommand(Command):
         if args:
             app_factory = ApplicationFactory()
             app_name = args[0]
-            app_args = args[1:]
-            redirections = args[-1] if isinstance(args[-1], dict) else {}
+            redirections = args[-1] if isinstance(args[-1], dict) else None
+            if redirections:
+                app_args = args[1:-1]
+            else:
+                app_args = args[1:]
             app_instance = app_factory.create_application(app_name)
-        
-            if 'out' in redirections:
-                with open(redirections['out'], 'w') as file:
-                    file.write(app_instance.exec(app_args))
-            elif 'in' in redirections:
-                app_args.remove(redirections['in'])
-                app_args = [redirections['in']] + app_args  # Pass filename directly
-                output.append(app_instance.exec(app_args))
+            if redirections:
+                if not redirections['out']==None:
+                    with open(redirections['out'], 'w') as file:
+                        file.write(app_instance.exec(app_args))
+                elif not redirections['in']==None:
+                    app_args.append(redirections['in'])
+                    output.append(app_instance.exec(app_args))
             else:
                 output.append(app_instance.exec(app_args))

@@ -113,22 +113,24 @@ class parseTreeFlattener(ShellParserVisitor):
             text = child.getText()
 
             if skip_next:
-                # Skip this child and reset the flag
                 skip_next = False
                 continue
-
-            # If the child is a redirection context, process it here.
+            # if isinstance(child, ShellParser.RedirectionContext) or text in ['<', '>']:
             if isinstance(child, ShellParser.RedirectionContext) or text in ['<', '>']:
-                redirection_target = self.visit(child.getChild(1)) if isinstance(child, ShellParser.RedirectionContext) else self.visit(ctx.getChild(i+1))
-                if text == '<':
-                    redirection['in'] = redirection_target
-                elif text == '>':
-                    redirection['out'] = redirection_target
-                skip_next = True  # Skip the next child since it's part of redirection
+                if i + 1 < ctx.getChildCount():
+                    redirection_target_node = ctx.getChild(i+1)
+                    redirection_target_text = redirection_target_node.getText()
+                    if text == '<':
+                        redirection['in'] = redirection_target_text
+                    elif text == '>':
+                        redirection['out'] = redirection_target_text
+                    skip_next = True  # Skip the next child since it's part of redirection
+                else:
+                    raise ValueError(f"Redirection symbol '{text}' at the end of command without a target")
+
             elif command is None:
                 command = self.processArg(text)
             else:
-                # Only add argument if it's not part of redirection
                 if text not in ['<', '>']:
                     argument = self.visit(child)
                     arguments.append(argument)
@@ -139,7 +141,9 @@ class parseTreeFlattener(ShellParserVisitor):
         full_command = [command] + arguments
         if redirection['in'] or redirection['out']:
             full_command.append(redirection)
+
         return full_command
+
 
     
     

@@ -18,6 +18,7 @@ def run(input_command):
     parse_tree = parser.command()
 
     visitor = parseTreeFlattener()
+
     flattened = visitor.visit(parse_tree)
 
     output = deque()
