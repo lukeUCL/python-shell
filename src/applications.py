@@ -48,6 +48,19 @@ class Cat(Application):
                 result += f.read()
         return result
 
+# class Cat(Application):   
+#     def exec(self, args):
+#         result = ""
+#         for arg in args:
+#             if isinstance(arg, str):  
+#                 with open(arg) as f:
+#                     result += f.read()
+#             elif hasattr(arg, 'read'):  
+#                 result += arg.read()
+#         return result
+
+
+
     
 class Head(Application):   
     def exec(self, args):

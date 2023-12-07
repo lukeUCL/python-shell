@@ -127,7 +127,7 @@ class TestShellVisitor(unittest.TestCase):
     #     self.assertEqual(result, expected)
     
     def test_flatten_output_redirection(self):
-        input_command = "echo foo > newfile.txt"
+        input_command = "cat < dir1/file2.txt"
         parse_tree = parse_command(input_command)
         visitor = parseTreeFlattener()
         result = visitor.visit(parse_tree)

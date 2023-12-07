@@ -3,6 +3,7 @@ from antlr4 import InputStream, CommonTokenStream, tree
 from PARSER.ShellParser import ShellParser
 from PARSER.ShellParserVisitor import ShellParserVisitor
 import re
+
 def process_inner_content(content):
     content = content.replace('\\\'', '\'').replace('\\"', '\"')
 
@@ -42,6 +43,7 @@ class parseTreeFlattener(ShellParserVisitor):
                 commands.extend(current_group)
 
         return self.simplify_command_structure(commands)
+        
     
     #idek some weird gpt code -- revisit
     def simplify_command_structure(self, commands):
@@ -104,24 +106,29 @@ class parseTreeFlattener(ShellParserVisitor):
         command = None
         arguments = []
         redirection = {'in': None, 'out': None}
+        skip_next = False  # Flag to skip processing the next child
 
         for i in range(ctx.getChildCount()):
             child = ctx.getChild(i)
             text = child.getText()
-            
-            # If the child is a redirection context, it should be processed here.
+
+            if skip_next:
+                # Skip this child and reset the flag
+                skip_next = False
+                continue
+
+            # If the child is a redirection context, process it here.
             if isinstance(child, ShellParser.RedirectionContext) or text in ['<', '>']:
                 redirection_target = self.visit(child.getChild(1)) if isinstance(child, ShellParser.RedirectionContext) else self.visit(ctx.getChild(i+1))
                 if text == '<':
                     redirection['in'] = redirection_target
                 elif text == '>':
                     redirection['out'] = redirection_target
+                skip_next = True  # Skip the next child since it's part of redirection
             elif command is None:
-                c = child.getText()
-                command = self.processArg(c)
-                
+                command = self.processArg(text)
             else:
-                # Ensure we don't process redirection symbols as arguments
+                # Only add argument if it's not part of redirection
                 if text not in ['<', '>']:
                     argument = self.visit(child)
                     arguments.append(argument)
@@ -133,6 +140,7 @@ class parseTreeFlattener(ShellParserVisitor):
         if redirection['in'] or redirection['out']:
             full_command.append(redirection)
         return full_command
+
     
     
     #COULDNT TOKENIZE for a"b"c-- ptnsh bad solution
