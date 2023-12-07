@@ -35,7 +35,7 @@ callCommand
  ;
  
 redirection
- : (LT | GT) argument
+ : (LT | GT)
  ;
 
 argument

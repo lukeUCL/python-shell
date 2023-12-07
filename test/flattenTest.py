@@ -126,13 +126,13 @@ class TestShellVisitor(unittest.TestCase):
     #     expected = ['echo', ['abc']]  
     #     self.assertEqual(result, expected)
     
-    # def test_flatten_output_redirection(self):
-    #     input_command = "echo foo > newfile.txt"
-    #     parse_tree = parse_command(input_command)
-    #     visitor = parseTreeFlattener()
-    #     result = visitor.visit(parse_tree)
-    #     expected = ['echo', ['foo', '>', 'newfile.txt']] 
-    #     self.assertEqual(result, expected)
+    def test_flatten_output_redirection(self):
+        input_command = "echo foo > newfile.txt"
+        parse_tree = parse_command(input_command)
+        visitor = parseTreeFlattener()
+        result = visitor.visit(parse_tree)
+        expected = ['echo', ['foo', '>', 'newfile.txt']] 
+        self.assertEqual(result, expected)
 
     # def test_idk(self):
     #     input_command = 'echo \"\'test\'\"'

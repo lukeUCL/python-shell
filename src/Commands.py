@@ -10,27 +10,55 @@ class SeqCommand(Command):
         for command in args:
             app = command[0]
             app_args = command[1:]
-            apps(app, app_args, output)
+            redirections = command[-1] if isinstance(command[-1], dict) else {}
+
+            if 'out' in redirections:
+                with open(redirections['out'], 'w') as file:
+                    apps(app, app_args, file)
+            elif 'in' in redirections:
+                with open(redirections['in'], 'r') as file:
+                    apps(app, file, output)
+            else:
+                apps(app, app_args, output)
+
 
 class PipeCommand(Command):
     def execute(self, args, output):
-        intermediate_output = deque()  
+        intermediate_output = deque()
         for i, command in enumerate(args):
             app = command[0]
             app_args = command[1:]
-            if i > 0: 
-                # force by prepending intermediate to args--- mabe we jsut use a diff paramete
-                app_args = list(intermediate_output) + app_args
-                intermediate_output.clear()
+            redirections = command[-1] if isinstance(command[-1], dict) else {}
 
-            apps(app, app_args, intermediate_output)
+            if i == 0 and 'in' in redirections:
+                with open(redirections['in'], 'r') as file:
+                    apps(app, file, intermediate_output)
+            elif i == len(args) - 1 and 'out' in redirections:
+                with open(redirections['out'], 'w') as file:
+                    apps(app, intermediate_output, file)
+            else:
+                apps(app, intermediate_output, intermediate_output)
 
-            if i == len(args) - 1:
+            if i < len(args) - 1: # intermediate step
+                intermediate_output = deque(intermediate_output) # prepare for next command
+
+            if i == len(args) - 1: # last command
                 output.extend(intermediate_output)
+
+
 
 class CallCommand(Command):
     def execute(self, args, output):
         if args:
             app = args[0]
             app_args = args[1:]
-            apps(app, app_args, output)
+            redirections = args[-1] if isinstance(args[-1], dict) else {}
+
+            if 'out' in redirections:
+                with open(redirections['out'], 'w') as file:
+                    apps(app, app_args, file)
+            elif 'in' in redirections:
+                with open(redirections['in'], 'r') as file:
+                    apps(app, file, output)
+            else:
+                apps(app, app_args, output)
