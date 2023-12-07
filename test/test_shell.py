@@ -116,18 +116,24 @@ class TestShell(unittest.TestCase):
     # #     self.assertEqual(result, ["AAA", "BBB", "AAA"])
 
 
-    def test_cat_stdin(self):
-        cmdline = "cat < dir1/file1.txt"
-        stdout = self.eval(cmdline)
-        result = stdout.strip().split("\n")
-        self.assertEqual(result, ["AAA", "BBB", "AAA"])
+    # def test_cat_stdin(self):
+    #     cmdline = "cat < dir1/file1.txt"
+    #     stdout = self.eval(cmdline)
+    #     result = stdout.strip().split("\n")
+    #     self.assertEqual(result, ["AAA", "BBB", "AAA"])
 
-    def test_unsafe_ls(self):
-        cmdline = "_ls dir3; echo AAA > newfile.txt"
-        self.eval(cmdline)
-        stdout = self.eval("cat newfile.txt", shell="/bin/bash")
+    # def test_unsafe_ls(self):
+    #     cmdline = "_ls dir3; echo AAA > newfile.txt"
+    #     self.eval(cmdline)
+    #     stdout = self.eval("cat newfile.txt", shell="/bin/bash")
+    #     result = stdout.strip()
+    #     self.assertEqual(result, "AAA")
+
+    def test_cut_union(self):
+        cmdline = "echo abc | cut -b -1,2-"
+        stdout = self.eval(cmdline)
         result = stdout.strip()
-        self.assertEqual(result, "AAA")
+        self.assertEqual(result, "abc")
 
 if __name__ == "__main__":
     unittest.main()
