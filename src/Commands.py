@@ -1,5 +1,5 @@
 from collections import deque
-from applications import apps
+from applications import ApplicationFactory
 
 class Command:
     def execute(self, args, output):
@@ -7,42 +7,47 @@ class Command:
 
 class SeqCommand(Command):
     def execute(self, args, output):
+        app_factory = ApplicationFactory()
         for command in args:
-            app = command[0]
+            app_name = command[0]
             app_args = command[1:]
             redirections = command[-1] if isinstance(command[-1], dict) else {}
+            app_instance = app_factory.create_application(app_name)
 
             if 'out' in redirections:
                 with open(redirections['out'], 'w') as file:
-                    apps(app, app_args, file)
+                    file.write(app_instance.exec(app_args))
             elif 'in' in redirections:
                 with open(redirections['in'], 'r') as file:
-                    apps(app, file, output)
+                    output.append(app_instance.exec([file.read()] + app_args))
             else:
-                apps(app, app_args, output)
-
+                output.append(app_instance.exec(app_args))
 
 class PipeCommand(Command):
     def execute(self, args, output):
+        app_factory = ApplicationFactory()
         intermediate_output = deque()
+
         for i, command in enumerate(args):
-            app = command[0]
+            app_name = command[0]
             app_args = command[1:]
             redirections = command[-1] if isinstance(command[-1], dict) else {}
+            app_instance = app_factory.create_application(app_name)
 
             if i == 0 and 'in' in redirections:
                 with open(redirections['in'], 'r') as file:
-                    apps(app, file, intermediate_output)
+                    intermediate_output.append(app_instance.exec([file.read()] + app_args))
             elif i == len(args) - 1 and 'out' in redirections:
+                final_output = ''.join(intermediate_output)
                 with open(redirections['out'], 'w') as file:
-                    apps(app, intermediate_output, file)
+                    file.write(app_instance.exec([final_output] + app_args))
             else:
-                apps(app, intermediate_output, intermediate_output)
+                intermediate_output.append(app_instance.exec(app_args))
 
-            if i < len(args) - 1: # intermediate step
-                intermediate_output = deque(intermediate_output) # prepare for next command
+            if i < len(args) - 1: 
+                intermediate_output = deque(intermediate_output)
 
-            if i == len(args) - 1: # last command
+            if i == len(args) - 1:
                 output.extend(intermediate_output)
 
 
@@ -50,15 +55,17 @@ class PipeCommand(Command):
 class CallCommand(Command):
     def execute(self, args, output):
         if args:
-            app = args[0]
+            app_factory = ApplicationFactory()
+            app_name = args[0]
             app_args = args[1:]
             redirections = args[-1] if isinstance(args[-1], dict) else {}
+            app_instance = app_factory.create_application(app_name)
 
             if 'out' in redirections:
                 with open(redirections['out'], 'w') as file:
-                    apps(app, app_args, file)
+                    file.write(app_instance.exec(app_args))
             elif 'in' in redirections:
                 with open(redirections['in'], 'r') as file:
-                    apps(app, file, output)
+                    output.append(app_instance.exec([file.read()] + app_args))
             else:
-                apps(app, app_args, output)
+                output.append(app_instance.exec(app_args))

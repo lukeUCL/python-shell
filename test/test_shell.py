@@ -102,17 +102,17 @@ class TestShell(unittest.TestCase):
     #     result = stdout.strip()
     #     self.assertEqual(result, '""')
 
-    # def test_splitting(self):
-    #     cmdline = 'echo a"b"c'
-    #     stdout = self.eval(cmdline)
-    #     result = stdout.strip()
-    #     self.assertEqual(result, "abc")
-
-    def test_cat_stdin(self):
-        cmdline = "cat < file1.txt"
+    def test_splitting(self):
+        cmdline = 'echo a"b"c'
         stdout = self.eval(cmdline)
-        result = stdout.strip().split("\n")
-        self.assertEqual(result, ["AAA", "BBB", "AAA"])
+        result = stdout.strip()
+        self.assertEqual(result, "abc")
+
+    # def test_cat_stdin(self):
+    #     cmdline = "cat < file1.txt"
+    #     stdout = self.eval(cmdline)
+    #     result = stdout.strip().split("\n")
+    #     self.assertEqual(result, ["AAA", "BBB", "AAA"])
 
 if __name__ == "__main__":
     unittest.main()
