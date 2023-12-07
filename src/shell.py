@@ -22,7 +22,10 @@ def run(input_command):
     flattened = visitor.visit(parse_tree)
 
     output = deque()
-
+    #['seq', ['_ls', 'dir3'], ['echo', 'AAA', {...}]]
+    #seq
+    #['_ls', 'dir3']
+    #['echo', 'AAA', {'in': None, 'out': 'newfile.txt'}]
     if isinstance(flattened[0], list):
         # Handle complex structures like pipeSeq
         for part in flattened:

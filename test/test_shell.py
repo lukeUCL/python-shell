@@ -122,5 +122,12 @@ class TestShell(unittest.TestCase):
         result = stdout.strip().split("\n")
         self.assertEqual(result, ["AAA", "BBB", "AAA"])
 
+    def test_unsafe_ls(self):
+        cmdline = "_ls dir3; echo AAA > newfile.txt"
+        self.eval(cmdline)
+        stdout = self.eval("cat newfile.txt", shell="/bin/bash")
+        result = stdout.strip()
+        self.assertEqual(result, "AAA")
+
 if __name__ == "__main__":
     unittest.main()
