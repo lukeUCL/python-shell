@@ -90,26 +90,62 @@ class Tail(Application):
             display_length = min(len(lines), num_lines)
             return "".join(lines[len(lines) - display_length:])
         
+# class Grep(Application):   
+#     def exec(self, args):
+#         if len(args) < 2:
+#             raise ValueError("wrong number of command line arguments")
+        
+#         pattern = args[0]
+#         files = args[1:]
+#         result = ""
+    
+#         for file in files:
+#             with open(file) as f:
+#                 lines = f.readlines()
+#                 for line in lines:
+#                     if re.match(pattern, line):
+#                         if len(files) > 1:
+#                             result += f"{file}:{line}"
+#                         else:
+#                             result += line
+
+#         return result
+
 class Grep(Application):   
     def exec(self, args):
         if len(args) < 2:
             raise ValueError("wrong number of command line arguments")
         
         pattern = args[0]
-        files = args[1:]
+        input = args[1:]
         result = ""
-    
-        for file in files:
-            with open(file) as f:
-                lines = f.readlines()
-                for line in lines:
-                    if re.match(pattern, line):
-                        if len(files) > 1:
-                            result += f"{file}:{line}"
-                        else:
-                            result += line
+
+        #adding check for files vs strings from pipes
+        #pipe input -> [aaa,bbb,ccc] etc, files [file1,file2] etc
+        #we could just do this check in the for loop
+        #but i dont think theres ever mix of strings and files so shud be fine
+        files = True
+        for file in input:
+            if not os.path.isfile(file): 
+                files = False
+
+        if files:
+            for file in input:
+                with open(file) as f:
+                    lines = f.readlines()
+                    for line in lines:
+                        if re.match(pattern, line):
+                            if len(input) > 1:
+                                result += f"{file}:{line}"
+                            else:
+                                result += line
+        else:
+            for segment in input:
+                if re.match(pattern, segment):
+                    result += segment
 
         return result
+
 
 class Find(Application):
     def exec(self, args):#prints the path to the file 
