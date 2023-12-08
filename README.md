@@ -46,8 +46,8 @@ Then, execute system tests using the following command (Python 3.7 or higher is 
 
 Individual system tests (e.g. `test_cat`) can be executed as
 
-    python system_test/tests.py -v TestShell.test_cat
-    
+    python3 system_test/tests.py -v TestShell.test_pipe_chain_sort_uniq
+
 # Language
 
 A shell can be considered as a language for executing commands. COMP0010 Shell is an interactive shell, that is it parses user's command lines and executes the specified commands in a loop, known also as [REPL]((https://en.wikipedia.org/wiki/Read%E2%80%93eval%E2%80%93print_loop)), that

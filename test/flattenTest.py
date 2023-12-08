@@ -126,13 +126,13 @@ class TestShellVisitor(unittest.TestCase):
     #     expected = ['echo', ['abc']]  
     #     self.assertEqual(result, expected)
     
-    def test_flatten_output_redirection(self):
-        input_command = "cat < dir1/file2.txt"
-        parse_tree = parse_command(input_command)
-        visitor = parseTreeFlattener()
-        result = visitor.visit(parse_tree)
-        expected = ['echo', ['foo', '>', 'newfile.txt']] 
-        self.assertEqual(result, expected)
+    # def test_flatten_output_redirection(self):
+    #     input_command ="cat dir1/file1.txt dir1/file2.txt | sort | uniq"
+    #     parse_tree = parse_command(input_command)
+    #     visitor = parseTreeFlattener()
+    #     result = visitor.visit(parse_tree)
+    #     expected = ['echo', ['foo', '>', 'newfile.txt']] 
+    #     self.assertEqual(result, expected)
 
     # def test_idk(self):
     #     input_command = 'echo \"\'test\'\"'
@@ -151,14 +151,14 @@ class TestShellVisitor(unittest.TestCase):
     #     expected = ['echo', ["a"]] 
     #     self.assertEqual(result, expected)
 
-    # def test_pseq(self):
-    #     input_command = "echo aaa | echo bbb | echo ccc ; echo ddd"
-    #     parse_tree = parse_command(input_command)
-    #     visitor = parseTreeFlattener()
-    #     result = visitor.visit(parse_tree)
-    #     print(result)
-    #     expected = ['echo', ["a"]]  
-    #     self.assertEqual(result, expected)
+    def test_pseq(self):
+        input_command ="echo aaa > dir1/file2.txt; cat dir1/file1.txt dir1/file2.txt | uniq -i"
+        parse_tree = parse_command(input_command)
+        visitor = parseTreeFlattener()
+        result = visitor.visit(parse_tree)
+        print(result)
+        expected = ['echo', ["a"]]  
+        self.assertEqual(result, expected)
 
 
 

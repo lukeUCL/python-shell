@@ -26,12 +26,15 @@ def run(input_command):
     #seq
     #['_ls', 'dir3']
     #['echo', 'AAA', {'in': None, 'out': 'newfile.txt'}]
+    #[['pipe', ['seq', ['echo', 'aaa', {'in': None, 'out': 'dir1/file2.txt'}], ['cat', 'dir1/file1.txt', 'dir1/file2.txt']]], ['pipe', ['uniq', '-i']]]
     if isinstance(flattened[0], list):
-        # Handle complex structures like pipeSeq
+        # only need, seq, followed by pipe, other way around is jsut a seq..?
+        intermediate = []
         for part in flattened:
-            if part[0] == 'pipe':
-                PipeCommand().execute(part[1:], output)
-            elif part[0] == 'seq':
+            if part[0] == 'seq':
+                intermediate.extend(SeqCommand().execute(part[1:], output,store=True))
+            elif part[0] == 'pipe':
+                part[1].extend(intermediate)
                 SeqCommand().execute(part[1:], output)
     elif flattened[0] == 'pipe':
         PipeCommand().execute(flattened[1:], output)

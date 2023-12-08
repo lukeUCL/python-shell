@@ -44,7 +44,8 @@ class parseTreeFlattener(ShellParserVisitor):
 
         return self.simplify_command_structure(commands)
         
-    
+
+
     #idek some weird gpt code -- revisit
     def simplify_command_structure(self, commands):
         if not isinstance(commands, list) or len(commands) == 0:
@@ -65,6 +66,7 @@ class parseTreeFlattener(ShellParserVisitor):
 
         # If it's a single command, just return it
         return commands
+
 
 
     def visitPipeCommand(self, ctx:ShellParser.PipeCommandContext):

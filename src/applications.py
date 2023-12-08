@@ -187,49 +187,149 @@ class Find(Application):
 
 
     
+# class Uniq(Application):
+#     def exec(self, args):
+#         #print('here')
+#         #return 'here'
+#         out = deque()
+#         res = ''
+#         if len(args) > 2 or len(args) < 1:
+#             raise ValueError("wrong number of command line arguements")
+#         ignoreCase = args[0] == '-i'
+#         if ignoreCase and len(args) == 2:
+#             file = args[1]
+#         elif not ignoreCase and len(args) == 1:
+#             file = args[0]
+#         ready = False
+#         temp = None
+#         line = None
+#         copy = None
+#         count = 0
+#         with open(file) as f:
+#             for l in f:
+#                 copy = str(l)
+#                 if ignoreCase:
+#                     line = l.lower()
+#                 else:
+#                     line = l
+
+#                 if not ready:
+#                     temp = line
+#                     ready = True
+#                     out.append(copy)
+#                     count += 1
+#                     continue
+#                 else:
+#                     if temp != line:
+#                         out.append(copy)
+#                         temp = line
+#                         count += 1
+#         if count == 0 and copy is not None:
+#             out.append(copy)
+#         if line != temp and copy is not None:
+#             out.append(copy)
+#         return "".join(out)
+
+# class Uniq(Application):
+#     def exec(self, args):
+#         #print('here')
+#         #return 'here'
+#         out = deque()
+#         if len(args) > 2 or len(args) < 1:
+#             raise ValueError("wrong number of command line arguements")
+#         ignoreCase = args[0] == '-i'
+#         if ignoreCase and len(args) == 2:
+#             input = args[1]
+#         elif not ignoreCase and len(args) == 1:
+#             input = args[0]
+#         ready = False
+#         temp = None
+#         line = None
+#         copy = None
+#         count = 0
+#         if os.path.isfile(input):
+#             with open(input) as f:
+#                 for l in f:
+#                     copy = str(l)
+#                     if ignoreCase:
+#                         line = l.lower()
+#                     else:
+#                         line = l
+
+#                     if not ready:
+#                         temp = line
+#                         ready = True
+#                         out.append(copy)
+#                         count += 1
+#                         continue
+#                     else:
+#                         if temp != line:
+#                             out.append(copy)
+#                             temp = line
+#                             count += 1
+#             if count == 0 and copy is not None:
+#                 out.append(copy)
+#             if line != temp and copy is not None:
+#                 out.append(copy)
+#         else:
+#             #if we have a string, we need to split it by newlines
+#             #and then check for uniq lines
+#             #this is because we are checking for uniq lines, not uniq characters
+#             input = input.split('\n')
+#             for l in input:
+#                 copy = str(l)
+#                 if ignoreCase:
+#                     line = l.lower()
+#                 else:
+#                     line = l
+
+#                 if not ready:
+#                     temp = line
+#                     ready = True
+#                     out.append(copy)
+#                     count += 1
+#                     continue
+#                 else:
+#                     if temp != line:
+#                         out.append(copy)
+#                         temp = line
+#                         count += 1
+#             if count == 0 and copy is not None:
+#                 out.append(copy)
+#             if line != temp and copy is not None:
+#                 out.append(copy)
+#         return "".join(out)
+
 class Uniq(Application):
     def exec(self, args):
-        #print('here')
-        #return 'here'
         out = deque()
-        res = ''
         if len(args) > 2 or len(args) < 1:
-            raise ValueError("wrong number of command line arguements")
-        ignoreCase = args[0] == '-i'
-        if ignoreCase and len(args) == 2:
-            file = args[1]
-        elif not ignoreCase and len(args) == 1:
-            file = args[0]
-        ready = False
-        temp = None
-        line = None
-        copy = None
-        count = 0
-        with open(file) as f:
-            for l in f:
-                copy = str(l)
-                if ignoreCase:
-                    line = l.lower()
-                else:
-                    line = l
+            raise ValueError("wrong number of command line arguments")  
+        if args[0] == '-i':
+            ignoreCase=True
+        else:
+            ignoreCase=False
+        input_source = args[-1]
 
-                if not ready:
-                    temp = line
-                    ready = True
-                    out.append(copy)
-                    count += 1
-                    continue
-                else:
-                    if temp != line:
-                        out.append(copy)
-                        temp = line
-                        count += 1
-        if count == 0 and copy is not None:
-            out.append(copy)
-        if line != temp and copy is not None:
-            out.append(copy)
-        return "".join(out)
+        def process_line(line, last_line):
+            normalized_line = line.lower() if ignoreCase else line
+            if normalized_line != last_line:
+                #split by \n in pipe strings 
+                out.append(line if line.endswith('\n') else line + '\n')
+                return normalized_line
+            return last_line
 
+        last_line = None
+        if os.path.isfile(input_source):
+            with open(input_source) as f:
+                for line in f:
+                    last_line = process_line(line, last_line)
+        else:
+            lines = input_source.split('\n')
+            for line in lines:
+                last_line = process_line(line, last_line)
+
+        return ''.join(out)
 
 
 # class Cut(Application):
@@ -329,27 +429,78 @@ class Cut(Application):
        
 class Sort(Application):
     def exec(self, args):
-        res = ''
         out = deque()
         if len(args) > 2:
             raise ValueError("wrong number of command line arguments")
+        
         reverse = (args[0] == "-r")
+
         if reverse and len(args) == 2:
-            file = args[1]
+            input = args[1]
         elif not reverse and len(args) == 1:
-            file = args[0]
+            input = args[0]
         else:
-            raise ValueError("wrong number of command line arguements")
+            raise ValueError("wrong number of command line arguments")
+        
         res = []
-        with open(file, "r") as f:
-            for line in f:
-                res.append(line)
-        res.sort()
-        if reverse:
-            res.reverse()
-        for elem in res:
-            out.append(elem)
-        return "".join(out)
+        
+        #use files flag again to check if we have a file or a string
+        #strings will actually be one input as well so myabe not for
+        #loop??
+
+        # files=True
+        # for element in input:
+        #     if not os.path.isfile(element):
+        #         files = False
+
+        if os.path.isfile(input):
+            with open(input, "r") as f:
+                for line in f:
+                    res.append(line)
+            res.sort()
+            if reverse:
+                res.reverse()
+            for elem in res:
+                out.append(elem)
+            return "".join(out)
+        else:
+            # we would have an array [result1\n, results2\n] etc 
+            #so split by new line
+            lines = input.split('\n')
+            for line in lines:
+                res.append(line)#put new line back
+
+            res.sort()
+            if reverse:
+                res.reverse()
+                
+            for elem in res:
+                out.append(elem+'\n')#put new line back for each
+            return "".join(out)
+
+# class Sort(Application):
+#     def exec(self, args):
+#         res = ''
+#         out = deque()
+#         if len(args) > 2:
+#             raise ValueError("wrong number of command line arguments")
+#         reverse = (args[0] == "-r")
+#         if reverse and len(args) == 2:
+#             file = args[1]
+#         elif not reverse and len(args) == 1:
+#             file = args[0]
+#         else:
+#             raise ValueError("wrong number of command line arguements")
+#         res = []
+#         with open(file, "r") as f:
+#             for line in f:
+#                 res.append(line)
+#         res.sort()
+#         if reverse:
+#             res.reverse()
+#         for elem in res:
+#             out.append(elem)
+#         return "".join(out)
 
 
 
