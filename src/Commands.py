@@ -57,8 +57,8 @@ class PipeCommand(Command):
                     elif not redirections['in']==None:
                         app_args.append(redirections['in'])
                         output.append(app_instance.exec(app_args))
-                    else:
-                        output.append(app_instance.exec(app_args))
+                else:
+                    output.append(app_instance.exec(app_args))
 
             #should be piped to next
             else:

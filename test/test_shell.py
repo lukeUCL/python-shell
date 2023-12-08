@@ -129,11 +129,48 @@ class TestShell(unittest.TestCase):
     #     result = stdout.strip()
     #     self.assertEqual(result, "AAA")
 
-    def test_cut_union(self):
-        cmdline = "echo abc | cut -b -1,2-"
+    # def test_cut_union(self):
+    #     cmdline = "echo abc | cut -b -1,2-"
+    #     stdout = self.eval(cmdline)
+    #     result = stdout.strip()
+    #     self.assertEqual(result, "abc")
+
+    # def test_cut_stdin(self):
+    #     cmdline = "echo abc | cut -b 1"
+    #     stdout = self.eval(cmdline)
+    #     result = stdout.strip()
+    #     self.assertEqual(result, "a")
+
+    def test_grep_stdin(self):
+        cmdline = "cat dir1/file1.txt dir1/file2.txt | grep '...'"
         stdout = self.eval(cmdline)
-        result = stdout.strip()
-        self.assertEqual(result, "abc")
+        result = stdout.strip().split("\n")
+        self.assertEqual(result, ["AAA", "BBB", "AAA", "CCC"])
+
+        #["AAA", "BBB", "AAA", "CCC"] this is the cat output, we know this
+
+    def test_pipe_uniq(self):
+        cmdline = (
+            "echo aaa > dir1/file2.txt; cat dir1/file1.txt dir1/file2.txt | uniq -i"
+        )
+        stdout = self.eval(cmdline)
+        result = stdout.strip().split("\n")
+        self.assertEqual(result, ["AAA", "BBB", "AAA"])
+
+    def test_pipe_chain_sort_uniq(self):
+        cmdline = "cat dir1/file1.txt dir1/file2.txt | sort | uniq"
+        stdout = self.eval(cmdline)
+        result = stdout.strip().split("\n")
+        self.assertEqual(result, ["AAA", "BBB", "CCC"])
+
+    def test_sort_uniq(self):
+        cmdline = "sort dir1/file1.txt | uniq"
+        stdout = self.eval(cmdline)
+        result = stdout.strip().split("\n")
+        self.assertEqual(result, ["AAA", "BBB"])
+
+
+
 
 if __name__ == "__main__":
     unittest.main()

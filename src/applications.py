@@ -98,7 +98,7 @@ class Grep(Application):
         pattern = args[0]
         files = args[1:]
         result = ""
-
+    
         for file in files:
             with open(file) as f:
                 lines = f.readlines()
@@ -196,36 +196,100 @@ class Uniq(Application):
 
 
 
+# class Cut(Application):
+#     def exec(self, args):
+#         out = deque()
+#         if len(args) < 3:
+#             raise ValueError("wrong number of command line arguements")
+#         options, file = args[:-1], args[-1]
+#         if options[0] != '-b' or len(options) < 2:
+#             raise ValueError("incorrect input")
+#         options = options[1].split(',')
+#         #return str(options)
+#         #finish implementing by going through fn byte by byte per line
+#         with open(file) as f:
+#             for line in f:
+#                 overlapStart = False
+#                 for option in options:
+#                     index = option.find('-')
+#                     if index != -1:
+#                         if option[0] == '-':
+#                             for elem in line[:int(option[1:])]:
+#                                 out.append(elem + '\n')
+#                         elif option[-1] == '-' and not overlapStart:
+#                             overlapStart = True
+#                             for elem in line[int(option[:-1]) - 1:]:
+#                                 out.append(elem)
+#                         elif option[-1] != '-':#option is specifcying a range
+#                             out.append(line[int(option[:index]) - 1:int(option[index + 1:])] + '\n')
+#                     else:#just wants those specific bytes
+#                         out.append(line[int(option)] + '\n')
+#                 #out.append(toAdd)
+#         return "".join(out)
+
+#some hardcoding here..? when we have -b 1, with a string, we should return 0 index, not 1 index so code doesnt work - just changred it to 
+#option-1..?
 class Cut(Application):
     def exec(self, args):
         out = deque()
         if len(args) < 3:
             raise ValueError("wrong number of command line arguements")
-        options, file = args[:-1], args[-1]
+        options, input = args[:-1], args[-1]
         if options[0] != '-b' or len(options) < 2:
             raise ValueError("incorrect input")
         options = options[1].split(',')
         #return str(options)
         #finish implementing by going through fn byte by byte per line
-        with open(file) as f:
-            for line in f:
-                overlapStart = False
-                for option in options:
-                    index = option.find('-')
-                    if index != -1:
-                        if option[0] == '-':
-                            for elem in line[:int(option[1:])]:
-                                out.append(elem + '\n')
-                        elif option[-1] == '-' and not overlapStart:
-                            overlapStart = True
-                            for elem in line[int(option[:-1]) - 1:]:
-                                out.append(elem)
-                        elif option[-1] != '-':#option is specifcying a range
-                            out.append(line[int(option[:index]) - 1:int(option[index + 1:])] + '\n')
-                    else:#just wants those specific bytes
-                        out.append(line[int(option)] + '\n')
-                #out.append(toAdd)
-        return "".join(out)
+        if os.path.isfile(input): 
+            with open(input) as f:
+                for line in f:
+                    overlapStart = False
+                    for option in options:
+                        index = option.find('-')
+                        if index != -1:
+                            if option[0] == '-':
+                                for elem in line[:int(option[1:])]:
+                                    out.append(elem + '\n')
+                            elif option[-1] == '-' and not overlapStart:
+                                overlapStart = True
+                                for elem in line[int(option[:-1]) - 1:]:
+                                    out.append(elem)
+                            elif option[-1] != '-':#option is specifcying a range
+                                out.append(line[int(option[:index]) - 1:int(option[index + 1:])] + '\n')
+                        else:#just wants those specific bytes
+                            out.append(line[int(option)] + '\n')
+                    #out.append(toAdd)
+            return "".join(out)
+        else:
+            #when we split the input(string) it will be a list, i,e .split('\n') -> 'abc' -> ['abc', '']
+            #this caused issues with particualar bytes, so we will just take the string at that section
+            input = input.split('\n')
+
+            overlapStart = False
+            for option in options:
+                index = option.find('-')
+                if index != -1:
+                    if option[0] == '-':
+                        for elem in input[:int(option[1:])]:
+                            out.append(elem + '\n')
+                    elif option[-1] == '-' and not overlapStart:
+                        overlapStart = True
+                        for elem in input[int(option[:-1]) - 1:]:
+                            out.append(elem)
+                    elif option[-1] != '-':#option is specifcying a range
+                        out.append(input[int(option[:index]) - 1:int(option[index + 1:])] + '\n')
+                else:#just wants those specific bytes
+                    #bytes vs string indexing
+                    #if we pass 1 with a string we want the first index, i,e cut -b 1 'abc' -> 'a'
+                    #so index by 0 
+                    input = input[0]
+                    ind = int(option) - 1
+                    out.append(input[ind] + '\n')
+            #out.append(toAdd)
+            return "".join(out)
+
+
+
        
 class Sort(Application):
     def exec(self, args):
