@@ -10,6 +10,20 @@ from os import listdir
 from collections import deque
 from glob import glob
 
+def expandGlob(commandLine):
+    flat = not isinstance(commandLine[0], list)
+
+    if not flat:
+        pass
+    else:
+        for i, arg in enumerate(commandLine):
+            if '*' in arg or '?' in arg:
+                rep = glob(arg)
+                commandLine[i]='\n'.join(rep).strip('\n')
+
+    return commandLine
+
+
 def run(input_command):
     input_stream = InputStream(input_command)
     lexer = shellLexer(input_stream)
@@ -20,6 +34,7 @@ def run(input_command):
     visitor = parseTreeFlattener()
 
     flattened = visitor.visit(parse_tree)
+    flattened = expandGlob(flattened)
 
     output = deque()
     #['seq', ['_ls', 'dir3'], ['echo', 'AAA', {...}]]

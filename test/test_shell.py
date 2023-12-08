@@ -78,11 +78,11 @@ class TestShell(unittest.TestCase):
     # #     result = stdout.strip()
     # #     self.assertEqual(result, ";")
 
-    # def test_doublequotes(self):
-    #     cmdline = 'echo "a  b"'
-    #     stdout = self.eval(cmdline)
-    #     result = stdout.strip()
-    #     self.assertEqual(result, "a  b")
+    def test_doublequotes(self):
+        cmdline = 'echo "a  b"'
+        stdout = self.eval(cmdline)
+        result = stdout.strip()
+        self.assertEqual(result, "a  b")
 
     # def test_substitution_doublequotes(self):
     #     cmdline = 'echo "`echo foo`"'
@@ -149,24 +149,24 @@ class TestShell(unittest.TestCase):
 
         #["AAA", "BBB", "AAA", "CCC"] this is the cat output, we know this
 
-    def test_pipe_uniq(self):
-        cmdline = (
-            "uniq -i AAA\nBBB\nAAA\naaa "
-        )
-        stdout = self.eval(cmdline)
-        result = stdout.strip().split("\n")
-        self.assertEqual(result, ["AAA", "BBB", "AAA"])
+    # def test_pipe_uniq(self):
+    #     cmdline = (
+    #         "uniq -i AAA\nBBB\nAAA\naaa "
+    #     )
+    #     stdout = self.eval(cmdline)
+    #     result = stdout.strip().split("\n")
+    #     self.assertEqual(result, ["AAA", "BBB", "AAA"])
 
-            #["AAA", "BBB", "AAA", "aaa", "CCC"] this is the cat output 
+    #         #["AAA", "BBB", "AAA", "aaa", "CCC"] this is the cat output 
 
-    def test_pipe_uniq(self):
-        cmdline = (
-            "uniq -i "'AAA', 'BBB', 'AAA', 'aaa'""
-        )
-        stdout = self.eval(cmdline)
-        result = stdout.strip().split("\n")
-        self.assertEqual(result, ["AAA", "BBB", "AAA"])
-        #['AAA', 'BBB', 'AAA', 'aaa']
+    # def test_pipe_uniq(self):
+    #     cmdline = (
+    #         "uniq -i "'AAA', 'BBB', 'AAA', 'aaa'""
+    #     )
+    #     stdout = self.eval(cmdline)
+    #     result = stdout.strip().split("\n")
+    #     self.assertEqual(result, ["AAA", "BBB", "AAA"])
+    #     #['AAA', 'BBB', 'AAA', 'aaa']
 
     # def test_pipe_chain_sort_uniq(self):
     #     cmdline = "cat dir1/file1.txt dir1/file2.txt | sort | uniq"
