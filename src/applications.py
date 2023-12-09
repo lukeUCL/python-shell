@@ -270,57 +270,6 @@ class Cut(Application):
         else:
             return cutProcess(input, False)
         
-class Sort(Application):
-    def exec(self, args):
-        out = deque()
-        if len(args) > 2:
-            raise ValueError("wrong number of command line arguments")
-        
-        reverse = (args[0] == "-r")
-
-        if reverse and len(args) == 2:
-            input = args[1]
-        elif not reverse and len(args) == 1:
-            input = args[0]
-        else:
-            raise ValueError("wrong number of command line arguments")
-        
-        res = []
-        
-        #use files flag again to check if we have a file or a string
-        #strings will actually be one input as well so myabe not for
-        #loop??
-
-        # files=True
-        # for element in input:
-        #     if not os.path.isfile(element):
-        #         files = False
-
-        if os.path.isfile(input):
-            with open(input, "r") as f:
-                for line in f:
-                    res.append(line)
-            res.sort()
-            if reverse:
-                res.reverse()
-            for elem in res:
-                out.append(elem)
-            return "".join(out)
-        else:
-            # we would have an array [result1\n, results2\n] etc 
-            #so split by new line
-            lines = input.split('\n')
-            for line in lines:
-                res.append(line)#put new line back
-
-            res.sort()
-            if reverse:
-                res.reverse()
-                
-            for elem in res:
-                out.append(elem+'\n')#put new line back for each
-            return "".join(out)
-
 # class Sort(Application):
 #     def exec(self, args):
 #         out = deque()
@@ -342,27 +291,74 @@ class Sort(Application):
 #         #strings will actually be one input as well so myabe not for
 #         #loop??
 
-#         if os.path.isfile(input):
-#             input = open(input, "r")
+#         # files=True
+#         # for element in input:
+#         #     if not os.path.isfile(element):
+#         #         files = False
 
-#         for line in input:
-#             for line in f:
-#                 res.append(line)
+#         if os.path.isfile(input):
+#             with open(input, "r") as f:
+#                 for line in f:
+#                     res.append(line)
 #             res.sort()
 #             if reverse:
 #                 res.reverse()
 #             for elem in res:
 #                 out.append(elem)
 #             return "".join(out)
+#         else:
+#             # we would have an array [result1\n, results2\n] etc 
+#             #so split by new line
+#             lines = input.split('\n')
+#             for line in lines:
+#                 res.append(line)#put new line back
 
-#     def __init__(self, app):
-#         self._app = app
+#             res.sort()
+#             if reverse:
+#                 res.reverse()
+                
+#             for elem in res:
+#                 out.append(elem+'\n')#put new line back for each
+#             return "".join(out)
 
-#     def exec(self, args):
-#         try:
-#             return self._app.exec(args)
-#         except Exception as e:
-#             return f"Error occurred: {str(e)}\n"
+class Sort(Application):
+    def exec(self, args):
+        out = deque()
+        if len(args) > 2:
+            raise ValueError("wrong number of command line arguments")
+        
+        reverse = (args[0] == "-r")
+
+        if reverse and len(args) == 2:
+            input = args[1]
+        elif not reverse and len(args) == 1:
+            input = args[0]
+        else:
+            raise ValueError("wrong number of command line arguments")
+        
+        res = []
+        
+        def sortInput(input,File):
+            for line in input:
+                res.append(line)
+            res.sort()
+            if reverse:
+                res.reverse()
+            for elem in res:
+                out.append(elem) if File else out.append(elem+'\n')
+            return "".join(out)
+            
+        if os.path.isfile(input):
+            input = open(input, "r")
+            return sortInput(input,File=True)
+        else:
+            # input = [[segment] for segment in input.split('\n')]
+            #     #remove empty string
+            # input = input[:-1]
+            input = input.split('\n')
+            return sortInput(input,File=False)
+
+        
 
 class UnsafeWrapper(Application):
     def __init__(self, app):
