@@ -56,11 +56,11 @@ singleQuoted
  ;
 
 doubleQuoted
- : DOUBLE_QUOTED_TEXT // This will now include double-quoted strings without command substitution
+ : DOUBLE_QUOTED_TEXT 
  ;
 
 backQuoted
- : BACK_QUOTED_TEXT // Match the token from the lexer
+ : BACK_QUOTED_TEXT 
  ;
 
 innerCommand
