@@ -89,27 +89,6 @@ class Tail(Application):
             lines = f.readlines()
             display_length = min(len(lines), num_lines)
             return "".join(lines[len(lines) - display_length:])
-        
-# class Grep(Application):   
-#     def exec(self, args):
-#         if len(args) < 2:
-#             raise ValueError("wrong number of command line arguments")
-        
-#         pattern = args[0]
-#         files = args[1:]
-#         result = ""
-    
-#         for file in files:
-#             with open(file) as f:
-#                 lines = f.readlines()
-#                 for line in lines:
-#                     if re.match(pattern, line):
-#                         if len(files) > 1:
-#                             result += f"{file}:{line}"
-#                         else:
-#                             result += line
-
-#         return result
 
 class Grep(Application):   
     def exec(self, args):
@@ -120,29 +99,27 @@ class Grep(Application):
         input = args[1:]
         result = ""
 
-        #adding check for files vs strings from pipes
-        #pipe input -> [aaa,bbb,ccc] etc, files [file1,file2] etc
-        #we could just do this check in the for loop
-        #but i dont think theres ever mix of strings and files so shud be fine
-        files = True
-        for file in input:
-            if not os.path.isfile(file): 
-                files = False
+        def grep(lines, file=False, filename=""):
+            grep_result = ""
+            for line in lines:
+                if re.search(pattern, line):
+                    if file:
+                        grep_result += f"{filename}:{line}"
+                    else:
+                        grep_result += line
+            return grep_result
 
-        if files:
+        if all(os.path.isfile(file) for file in input):
             for file in input:
-                with open(file) as f:
+                with open(file, "r") as f:
+                    #check line by line 
                     lines = f.readlines()
-                    for line in lines:
-                        if re.match(pattern, line):
-                            if len(input) > 1:
-                                result += f"{file}:{line}"
-                            else:
-                                result += line
+                    #only need fileName when we have multiple files
+                    result += grep(lines, file=(len(input) > 1), filename=file)
+
+        #strings, just directly process
         else:
-            for segment in input:
-                if re.match(pattern, segment):
-                    result += segment
+            result = grep(input)
 
         return result
 
@@ -270,56 +247,6 @@ class Cut(Application):
         else:
             return cutProcess(input, False)
         
-# class Sort(Application):
-#     def exec(self, args):
-#         out = deque()
-#         if len(args) > 2:
-#             raise ValueError("wrong number of command line arguments")
-        
-#         reverse = (args[0] == "-r")
-
-#         if reverse and len(args) == 2:
-#             input = args[1]
-#         elif not reverse and len(args) == 1:
-#             input = args[0]
-#         else:
-#             raise ValueError("wrong number of command line arguments")
-        
-#         res = []
-        
-#         #use files flag again to check if we have a file or a string
-#         #strings will actually be one input as well so myabe not for
-#         #loop??
-
-#         # files=True
-#         # for element in input:
-#         #     if not os.path.isfile(element):
-#         #         files = False
-
-#         if os.path.isfile(input):
-#             with open(input, "r") as f:
-#                 for line in f:
-#                     res.append(line)
-#             res.sort()
-#             if reverse:
-#                 res.reverse()
-#             for elem in res:
-#                 out.append(elem)
-#             return "".join(out)
-#         else:
-#             # we would have an array [result1\n, results2\n] etc 
-#             #so split by new line
-#             lines = input.split('\n')
-#             for line in lines:
-#                 res.append(line)#put new line back
-
-#             res.sort()
-#             if reverse:
-#                 res.reverse()
-                
-#             for elem in res:
-#                 out.append(elem+'\n')#put new line back for each
-#             return "".join(out)
 
 class Sort(Application):
     def exec(self, args):
@@ -352,9 +279,6 @@ class Sort(Application):
             input = open(input, "r")
             return sortInput(input,File=True)
         else:
-            # input = [[segment] for segment in input.split('\n')]
-            #     #remove empty string
-            # input = input[:-1]
             input = input.split('\n')
             return sortInput(input,File=False)
 
