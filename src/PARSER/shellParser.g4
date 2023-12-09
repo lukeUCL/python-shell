@@ -62,7 +62,3 @@ doubleQuoted
 backQuoted
  : BACK_QUOTED_TEXT 
  ;
-
-innerCommand
- : callCommand
- ;

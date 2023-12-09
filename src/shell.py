@@ -34,7 +34,6 @@ def run(input_command):
 
     flattened = visitor.visit(parse_tree)
     flattened = expandGlob(flattened)
-
     output = deque()
     #['seq', ['_ls', 'dir3'], ['echo', 'AAA', {...}]]
     #seq

@@ -152,7 +152,7 @@ class TestShellVisitor(unittest.TestCase):
     #     self.assertEqual(result, expected)
 
     def test_pseq(self):
-        input_command ='echo "a `echo "b"`"'
+        input_command ="find dir1 -name '*.txt'"
         parse_tree = parse_command(input_command)
         visitor = parseTreeFlattener()
         result = visitor.visit(parse_tree)
