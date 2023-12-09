@@ -152,7 +152,7 @@ class TestShellVisitor(unittest.TestCase):
     #     self.assertEqual(result, expected)
 
     def test_pseq(self):
-        input_command ="echo aaa > dir1/file2.txt; cat dir1/file1.txt dir1/file2.txt | uniq -i"
+        input_command ='echo "a `echo "b"`"'
         parse_tree = parse_command(input_command)
         visitor = parseTreeFlattener()
         result = visitor.visit(parse_tree)
@@ -163,20 +163,20 @@ class TestShellVisitor(unittest.TestCase):
 
 
 
-# input_command = "< dir1/file2.txt cat"
+input_command = 'echo "a `echo "b"`"'
 
-# parse_tree = parse_command(input_command)
-# # (command (callCommand (argument echo) (argument (quoted (singleQuoted ' hello world ')))))
+parse_tree = parse_command(input_command)
+# (command (callCommand (argument echo) (argument (quoted (singleQuoted ' hello world ')))))
 
-# # visitor = parseTreeFlattener()
-# # result = visitor.visit(parse_tree)
+# visitor = parseTreeFlattener()
+# result = visitor.visit(parse_tree)
 
-# lexer = shellLexer(InputStream(input_command))
-# for token in lexer.getAllTokens():
-#     token_type = lexer.symbolicNames[token.type] 
-#     print(token_type)
-#     print(token)
-# lexer.reset()  
+lexer = shellLexer(InputStream(input_command))
+for token in lexer.getAllTokens():
+    token_type = lexer.symbolicNames[token.type] 
+    print(token_type)
+    print(token)
+lexer.reset()  
 
 
 if __name__ == '__main__':

@@ -17,10 +17,6 @@ NEWLINE         : [\r\n]+ -> skip ;
 PIPE            : '|' ;
 SEMI            : ';' ;
 
-SINGLE_QUOTED_TEXT : '\'' (~['\n\r])* '\'' ;
-//DOUBLE_QUOTED_TEXT : '"' ( ~["\r\n] | BACK_QUOTE ~[`]* BACK_QUOTE )* '"';
-BACK_QUOTED_TEXT   : '`' ( ESCAPE_SEQUENCE | ~[`\\])* '`';
-DOUBLE_QUOTED_TEXT : '"' ( ESCAPE_SEQUENCE | NESTED_BACK_QUOTE | ~["\r\n\\`])* '"';
-fragment NESTED_BACK_QUOTE : BACK_QUOTE ( ESCAPE_SEQUENCE | ~[`\\])* BACK_QUOTE;
-
-fragment ESCAPE_SEQUENCE : '\\' . ;  // Handles escaped characters
+SINGLE_QUOTED_TEXT : SINGLE_QUOTE (~['\n\r])* SINGLE_QUOTE ;
+BACK_QUOTED_TEXT   : BACK_QUOTE (~[`\\])* BACK_QUOTE;
+DOUBLE_QUOTED_TEXT : DOUBLE_QUOTE ( BACK_QUOTED_TEXT | ~["\r\n\\`])* DOUBLE_QUOTE;

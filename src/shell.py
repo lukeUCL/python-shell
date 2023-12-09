@@ -6,7 +6,6 @@ from parseTreeFlattener import parseTreeFlattener
 from Commands import SeqCommand, PipeCommand, CallCommand
 import sys
 import os
-from os import listdir
 from collections import deque
 from glob import glob
 

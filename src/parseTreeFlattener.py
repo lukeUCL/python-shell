@@ -9,7 +9,6 @@ def process_inner_content(content):
 
     return content
 
-
 class parseTreeFlattener(ShellParserVisitor):
 
     def visitSeqPipeCommand(self, ctx:ShellParser.SeqPipeCommandContext):
@@ -29,7 +28,6 @@ class parseTreeFlattener(ShellParserVisitor):
                             commands.extend(current_group)
                         current_group = []
 
-                    # currenttype based on separator
                     current_type = 'seq' if child.symbol.type == ShellParser.SEMI else 'pipe'
             else:
                 command = self.visit(child)
@@ -45,8 +43,6 @@ class parseTreeFlattener(ShellParserVisitor):
         return self.simplify_command_structure(commands)
         
 
-
-    #idek some weird gpt code -- revisit
     def simplify_command_structure(self, commands):
         if not isinstance(commands, list) or len(commands) == 0:
             return commands
@@ -64,60 +60,48 @@ class parseTreeFlattener(ShellParserVisitor):
             
             return flattened_commands
 
-        # If it's a single command, just return it
         return commands
 
-
-
     def visitPipeCommand(self, ctx:ShellParser.PipeCommandContext):
-        # add pipe flag,,,,, naive approach?
         pipe_sequence = ['pipe']
-        for i in range(0, ctx.getChildCount(), 2):  #odd indices....?
+        for i in range(0, ctx.getChildCount(), 2):  
             command = self.visit(ctx.getChild(i))
-            #force only 1 pipe
-            if command[0] != 'pipe':
-                pipe_sequence.append(command)
-            else:
-                pipe_sequence.extend(command[1:])
+            #ensure we only have one pipe flag, i.e ['pipe'[command, args]]
+            if command:
+                if command[0] != 'pipe':
+                    pipe_sequence.append(command)
+                else:
+                    pipe_sequence.extend(command[1:])
         return pipe_sequence
 
-
-
+    #same approach as pipe above
     def visitSeqCommand(self, ctx:ShellParser.SeqCommandContext):
         sequence = ['seq']
         for i in range(ctx.getChildCount()):
             command = self.visit(ctx.getChild(i))
-            if command:  # error for none type before
+            if command:  
                 if command[0] != 'seq':
                     sequence.append(command)
                 else:
                     sequence.extend(command[1:])
         return sequence
 
-    # def visitCallCommand(self, ctx:ShellParser.CallCommandContext):
-    #     #command
-    #     command = ctx.getChild(0).getText()
-    #     #rest shud be args
-    #     arguments = [self.visit(child) for child in ctx.getChildren()][1:]
-        
-    #     arguments = [arg for arg in arguments if arg]
-        
-    #     return [command, arguments]
-
     def visitCallCommand(self, ctx):
         command = None
         arguments = []
         redirection = {'in': None, 'out': None}
-        skip_next = False  # Flag to skip processing the next child
+        skip_next = False  #Flag to skip for redirection case
 
         for i in range(ctx.getChildCount()):
+
             child = ctx.getChild(i)
             text = child.getText()
 
+            #if we have seen a redirection symbol, we skip the next child, as we will have processed redirection, and arg
             if skip_next:
                 skip_next = False
                 continue
-            # if isinstance(child, ShellParser.RedirectionContext) or text in ['<', '>']:
+
             if isinstance(child, ShellParser.RedirectionContext) or text in ['<', '>']:
                 if i + 1 < ctx.getChildCount():
                     redirection_target_node = ctx.getChild(i+1)
@@ -128,6 +112,7 @@ class parseTreeFlattener(ShellParserVisitor):
                         redirection['out'] = redirection_target_text
                     skip_next = True  # Skip the next child since it's part of redirection
                 else:
+                    #redirection with no target
                     raise ValueError(f"Redirection symbol '{text}' at the end of command without a target")
 
             elif command is None:
@@ -144,12 +129,9 @@ class parseTreeFlattener(ShellParserVisitor):
         if redirection['in'] or redirection['out']:
             full_command.append(redirection)
 
-        return full_command
-
-
+        return full_command 
     
-    
-    #COULDNT TOKENIZE for a"b"c-- ptnsh bad solution
+    #Args are either quoted (double or single), backquoted, or a mix, where splitting should be taken care off with processArg
     def visitArgument(self, ctx:ShellParser.ArgumentContext):
 
         if ctx.quoted():
@@ -172,38 +154,43 @@ class parseTreeFlattener(ShellParserVisitor):
         return [redirection_type, file_or_command]
 
 
+    #just visit child- single or double quoted
     def visitQuoted(self, ctx:ShellParser.QuotedContext):
         return self.visit(ctx.getChild(0))
-    
+
+    #just return inner content as is 
     def visitSingleQuoted(self, ctx:ShellParser.SingleQuotedContext):
         inner_content = ctx.getText()[1:-1]
         return process_inner_content(inner_content)
 
-    
+    #just return inner content as is 
     def visitDoubleQuoted(self, ctx:ShellParser.DoubleQuotedContext):
-        text = ctx.getText()[1:-1]  # Remove the surrounding quotes
+        text = ctx.getText()[1:-1] 
         return self.processArg(text)
 
     def processArg(self, text):
         from shell import run
         # Process the nested command substitutions
         result = ""
-        # Pattern to find backquoted text
+        #Check for backquoted to be subbed
         pattern = r'`([^`]*)`'
         while '`' in text:
             match = re.search(pattern, text)
             if match:
+                #store text before backquotes
                 pre_text = text[:match.start()]
-                command_substitution = match.group(1)  # Extract the command
-                #else we can jjst process it normally- echo is an outlier?
+                command_substitution = match.group(1) #extract the command
+                #echo is a unique edge case, if we have echo echo we can just skip 5 indexes
                 if command_substitution.startswith("echo echo"):
                     return command_substitution[5:] 
+                #store text after backquotes
                 post_text = text[match.end():]
 
-                # Execute the command substitution
+                #nested shell call, just process the command with run from shell
+                #use this output as sub
                 substitution_output_deque = run(command_substitution)
 
-                # we will never need any \n in substitution output..? we cant just call like `echo x`
+                # we will never need any \n in substitution output, replace with spaces
                 substitution_output_str = ''.join(substitution_output_deque).replace('\n', ' ').strip()
 
                 result += pre_text + substitution_output_str
@@ -216,22 +203,5 @@ class parseTreeFlattener(ShellParserVisitor):
     def visitBackQuoted(self, ctx):
         backQuotedText = ctx.getText()
         return self.processArg(backQuotedText)
-
-
-    def visitCommandSubstitution(self, ctx):
-        # run callComm here?
-        pass
-
-
-    def visitInnerCommand(self, ctx:ShellParser.InnerCommandContext):
-        return ctx.getText()
-
-    # def visitConcatArg(self, ctx:ShellParser.ConcatArgContext):
-
-    #     full_arg = ctx.getText()
-    #     processed_arg = full_arg.replace('"', '')
-
-    #     return processed_arg
-
 
 # del ShellParser- cant access 

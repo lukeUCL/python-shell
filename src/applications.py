@@ -148,42 +148,38 @@ class Grep(Application):
 
 
 class Find(Application):
-    def exec(self, args):#prints the path to the file 
+    def exec(self, args):
         out = deque()
-        res = ''
-        #expects input directory "-name" filename.type
-        initial_dir = os.getcwd()
-        subdirectories = deque()
-        path = args[0]
-        if len(path) == 1:
-            if path == '~': #all files in home of type
-                os.chdir(os.path.expanduser("~"))
-            else:
-                raise ValueError('wrong command')
+        cwdRoot = False
+        if len(args) > 3 or len(args) < 2:
+            raise ValueError("wrong number of command line arguments")
+        if len(args) == 2:
+            cwdRoot = True
+            path = os.getcwd()
+            pattern = args[1]
         else:
-            if path[0:2] == './' or path[0] == '/': #all files in current directory
-                os.chdir(path[2:])
-            else:
-                raise ValueError('wrong command')
-        #now we are in the correct start directory, begin searching
-        for f in listdir(os.getcwd()):
-            if not f.startswith("."):
-                if '.' in f:
-                    if f[-len(args[2]):] == args[2]:
-                        out.append(f)
-                else: #is a subdirectory
-                    subdirectories.append(os.getcwd + f)
-        while len(subdirectories) > 0:
-            os.chdir(subdirectories.pop())
-            for f in listdir(os.getcwd()):
-                if not f.startswith("."):
-                    if '.' in f:
-                        if f[-len(args[2]):] == args[2]:
-                            out.append(f)
-                    else: #is a subdirectory
-                        subdirectories.append(os.getcwd + f)       
-        os.chdir(initial_dir)
+            path = args[0]
+            pattern = args[2]
+
+        if not os.path.isdir(path):
+            raise ValueError("path is not a directory")
+        self.search(path, pattern, out)
+        if cwdRoot:
+            res = deque()
+            while len(out) > 0:
+                res.append('.' + out.pop()[len(os.getcwd()):])
+            out = res
         return "".join(out)
+    
+    def search(self, path, pattern, out):
+        if not os.path.isdir(path):
+            raise ValueError("path is not a directory")
+        for file in os.listdir(path):
+            if os.path.isdir(os.path.join(path, file)):
+                self.search(os.path.join(path, file), pattern, out)
+            else:
+                if file == pattern or (pattern[0:2] == "'*" and file.endswith(pattern[1:-1])):
+                    out.append(os.path.join(path, file))
 
 
     
