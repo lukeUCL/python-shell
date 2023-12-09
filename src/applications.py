@@ -214,7 +214,9 @@ class Uniq(Application):
 
 #some hardcoding here..? when we have -b 1, with a string, we should return 0 index, not 1 index so code doesnt work - just changred it to 
 #option-1..?
+
 class Cut(Application):
+
     def exec(self, args):
         out = deque()
         if len(args) < 3:
@@ -223,59 +225,51 @@ class Cut(Application):
         if options[0] != '-b' or len(options) < 2:
             raise ValueError("incorrect input")
         options = options[1].split(',')
-        #return str(options)
-        #finish implementing by going through fn byte by byte per line
-        if os.path.isfile(input): 
-            with open(input) as f:
-                for line in f:
-                    overlapStart = False
-                    for option in options:
-                        index = option.find('-')
-                        if index != -1:
-                            if option[0] == '-':
+
+
+        def cutProcess(input, File):
+            if File:
+                input = open(input)
+             
+            #for strings passed by pipe, we want to consider each string as a single element, so we'll nest them 
+            else:
+                input = [[segment] for segment in input.split('\n')]
+                #remove empty string
+                input = input[:-1]
+
+            for line in input:
+
+                overlapStart = False
+                for option in options:
+                    index = option.find('-')
+                    if index != -1:
+                        if option[0] == '-':
                                 for elem in line[:int(option[1:])]:
                                     out.append(elem + '\n')
-                            elif option[-1] == '-' and not overlapStart:
-                                overlapStart = True
-                                for elem in line[int(option[:-1]) - 1:]:
-                                    out.append(elem)
-                            elif option[-1] != '-':#option is specifcying a range
-                                out.append(line[int(option[:index]) - 1:int(option[index + 1:])] + '\n')
-                        else:#just wants those specific bytes
-                            out.append(line[int(option)] + '\n')
-                    #out.append(toAdd)
+                        elif option[-1] == '-' and not overlapStart:
+                            overlapStart = True
+                            for elem in line[int(option[:-1]) - 1:]:
+                                out.append(elem)
+                        elif option[-1] != '-':#option is specifcying a range
+                            out.append(line[int(option[:index]) - 1:int(option[index + 1:])] + '\n')
+                    else:#just wants those specific bytes
+                        if not File:
+                            #adjust bytes to string index
+                            option = str(int(option) - 1)
+                            #extract string from square brackets
+                            line = line[0]
+                        out.append(line[int(option)] + '\n')
+                #out.append(toAdd)
             return "".join(out)
+
+        #when we split the input(string) it will be a list, i,e .split('\n') -> 'abc' -> ['abc', '']
+        #this caused issues with particualar bytes, so we will just take the string at that section
+
+        if os.path.isfile(input): 
+            return cutProcess(input, True)
         else:
-            #when we split the input(string) it will be a list, i,e .split('\n') -> 'abc' -> ['abc', '']
-            #this caused issues with particualar bytes, so we will just take the string at that section
-            input = input.split('\n')
-
-            overlapStart = False
-            for option in options:
-                index = option.find('-')
-                if index != -1:
-                    if option[0] == '-':
-                        for elem in input[:int(option[1:])]:
-                            out.append(elem + '\n')
-                    elif option[-1] == '-' and not overlapStart:
-                        overlapStart = True
-                        for elem in input[int(option[:-1]) - 1:]:
-                            out.append(elem)
-                    elif option[-1] != '-':#option is specifcying a range
-                        out.append(input[int(option[:index]) - 1:int(option[index + 1:])] + '\n')
-                else:#just wants those specific bytes
-                    #bytes vs string indexing
-                    #if we pass 1 with a string we want the first index, i,e cut -b 1 'abc' -> 'a'
-                    #so index by 0 
-                    input = input[0]
-                    ind = int(option) - 1
-                    out.append(input[ind] + '\n')
-            #out.append(toAdd)
-            return "".join(out)
-
-
-
-       
+            return cutProcess(input, False)
+        
 class Sort(Application):
     def exec(self, args):
         out = deque()
@@ -329,29 +323,46 @@ class Sort(Application):
 
 # class Sort(Application):
 #     def exec(self, args):
-#         res = ''
 #         out = deque()
 #         if len(args) > 2:
 #             raise ValueError("wrong number of command line arguments")
+        
 #         reverse = (args[0] == "-r")
+
 #         if reverse and len(args) == 2:
-#             file = args[1]
+#             input = args[1]
 #         elif not reverse and len(args) == 1:
-#             file = args[0]
+#             input = args[0]
 #         else:
-#             raise ValueError("wrong number of command line arguements")
+#             raise ValueError("wrong number of command line arguments")
+        
 #         res = []
-#         with open(file, "r") as f:
+        
+#         #use files flag again to check if we have a file or a string
+#         #strings will actually be one input as well so myabe not for
+#         #loop??
+
+#         if os.path.isfile(input):
+#             input = open(input, "r")
+
+#         for line in input:
 #             for line in f:
 #                 res.append(line)
-#         res.sort()
-#         if reverse:
-#             res.reverse()
-#         for elem in res:
-#             out.append(elem)
-#         return "".join(out)
+#             res.sort()
+#             if reverse:
+#                 res.reverse()
+#             for elem in res:
+#                 out.append(elem)
+#             return "".join(out)
 
+#     def __init__(self, app):
+#         self._app = app
 
+#     def exec(self, args):
+#         try:
+#             return self._app.exec(args)
+#         except Exception as e:
+#             return f"Error occurred: {str(e)}\n"
 
 class UnsafeWrapper(Application):
     def __init__(self, app):
