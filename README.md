@@ -46,7 +46,7 @@ Then, execute system tests using the following command (Python 3.7 or higher is 
 
 Individual system tests (e.g. `test_cat`) can be executed as
 
-    python3 system_test/tests.py -v TestShell.test_find
+    python3 system_test/tests.py -v TestShell.test_wc
 
 # Language
 

@@ -592,6 +592,5 @@ class TestShell(unittest.TestCase):
         result = stdout.strip()
         self.assertEqual(result, "abc")
 
-
 if __name__ == "__main__":
     unittest.main()

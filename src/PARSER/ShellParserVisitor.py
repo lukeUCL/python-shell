@@ -64,10 +64,5 @@ class ShellParserVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by ShellParser#innerCommand.
-    def visitInnerCommand(self, ctx:ShellParser.InnerCommandContext):
-        return self.visitChildren(ctx)
-
-
 
 del ShellParser

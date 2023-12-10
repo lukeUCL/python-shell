@@ -3,7 +3,7 @@ from collections import deque
 from PARSER.ShellLexer import shellLexer
 from PARSER.ShellParser import ShellParser
 from parseTreeFlattener import parseTreeFlattener
-from Commands import SeqCommand, PipeCommand, CallCommand
+from Commands import evalCommand
 import sys
 import os
 from collections import deque
@@ -22,7 +22,6 @@ def expandGlob(commandLine):
 
     return commandLine
 
-
 def run(input_command):
     input_stream = InputStream(input_command)
     lexer = shellLexer(input_stream)
@@ -31,32 +30,12 @@ def run(input_command):
     parse_tree = parser.command()
 
     visitor = parseTreeFlattener()
-
     flattened = visitor.visit(parse_tree)
     flattened = expandGlob(flattened)
     output = deque()
-    #['seq', ['_ls', 'dir3'], ['echo', 'AAA', {...}]]
-    #seq
-    #['_ls', 'dir3']
-    #['echo', 'AAA', {'in': None, 'out': 'newfile.txt'}]
-    #[['pipe', ['seq', ['echo', 'aaa', {'in': None, 'out': 'dir1/file2.txt'}], ['cat', 'dir1/file1.txt', 'dir1/file2.txt']]], ['pipe', ['uniq', '-i']]]
-    if isinstance(flattened[0], list):
-        # only need, seq, followed by pipe, other way around is jsut a seq..?
-        intermediate = []
-        for part in flattened:
-            if part[0] == 'seq':
-                intermediate.extend(SeqCommand().execute(part[1:], output,store=True))
-            elif part[0] == 'pipe':
-                part[1].extend(intermediate)
-                SeqCommand().execute(part[1:], output)
-    elif flattened[0] == 'pipe':
-        PipeCommand().execute(flattened[1:], output)
-    elif flattened[0] == 'seq':
-        SeqCommand().execute(flattened[1:], output)
-    else:
-        CallCommand().execute(flattened, output)
-
+    evalCommand(flattened,output)
     return output
+    
 
 if __name__ == "__main__":
     args_num = len(sys.argv) - 1

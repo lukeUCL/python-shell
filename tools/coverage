@@ -30,6 +30,7 @@ if args.value:
     
 else:
     subprocess.run("coverage run --branch -m nose2 test", shell=True)
-    subprocess.run("coverage html", shell=True)
+    subprocess.run(
+        "coverage html --omit=src/PARSER/ShellParser.py,src/PARSER/ShellParserVisitor.py,src/PARSER/ShellLexerLexer.py,src/PARSER/ShellLexer.py", shell=True)
     subprocess.run("cd htmlcov/ && python -m http.server", shell=True)
 

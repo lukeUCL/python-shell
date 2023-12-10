@@ -107,14 +107,5 @@ class ShellParserListener(ParseTreeListener):
         pass
 
 
-    # Enter a parse tree produced by ShellParser#innerCommand.
-    def enterInnerCommand(self, ctx:ShellParser.InnerCommandContext):
-        pass
-
-    # Exit a parse tree produced by ShellParser#innerCommand.
-    def exitInnerCommand(self, ctx:ShellParser.InnerCommandContext):
-        pass
-
-
 
 del ShellParser

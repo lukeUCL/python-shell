@@ -89,7 +89,7 @@ class TestShellGrammar(unittest.TestCase):
 
     def test_a(self):
         # input = "ls    -la"
-        input = "echo aaa > dir1/file2.txt; cat dir1/file1.txt dir1/file2.txt | uniq -i"
+        input = "echo a\"a\"a"
         expected = "(command (callCommand (argument ls) (argument -la)))"
         self.assertEqual(parse_command(input), expected)
 

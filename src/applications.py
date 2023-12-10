@@ -1,11 +1,8 @@
 import os
 import re
-import sys
 from abc import ABC, abstractmethod
 from os import listdir
 from collections import deque
-from typing import List
-
 
 class Application(ABC):  
 
@@ -47,9 +44,7 @@ class Cat(Application):
             with open(a) as f:
                 result += f.read()
         return result
-
-
-    
+ 
 class Head(Application):   
     def exec(self, args):
         if len(args) != 1 and len(args) != 3:
@@ -282,7 +277,84 @@ class Sort(Application):
             input = input.split('\n')
             return sortInput(input,File=False)
 
+class Wc(Application):
+
+    def exec(self, args):
+        if len(args) != 2:
+            raise ValueError("wc expects exactly one argument for file or string input")
+
+        option, input_source = args
+        if option not in ['-l', '-w', '-c']:
+            raise ValueError("wc expects an option -l (lines), -w (words), or -c (characters)")
+
+        if os.path.isfile(input_source):
+            with open(input_source, 'r') as file:
+                content = file.read()
+        else:
+            content = input_source
+
+        if option == '-l':
+            return str(self.countLines(content))
+        elif option == '-w':
+            return str(self.countWords(content))
+        elif option == '-c':
+            return str(self.countChars(content))
+
+    def countLines(self, content):
+        a= content.count('\n')
+        print(a)
+
+    def countWords(self, content):
+        return len(content.split())
+
+    def countChars(self, content):
+        return len(content)
+
+import difflib
+
+class Diff:
+    def exec(self, args):
+        #arg checking
+        if len(args) != 2:
+            raise ValueError("Two arguments are required for diff.")
         
+        #content to compare
+        content1 = self.getContent(args[0])
+        content2 = self.getContent(args[1])
+
+        diff = self.computeDiff(content1, content2)
+        return self.join(diff)
+
+    def getContent(self, source):
+        if os.path.isfile(source):
+            with open(source, 'r') as file:
+                return file.readlines()
+        #string case
+        else:
+            return source.splitlines()
+
+    def computeDiff(self, content1, content2):
+        # difflib to check file diff
+        diff = difflib.unified_diff(content1, content2, lineterm='')
+        return list(diff)
+
+    def join(self, diff):
+        return '\n'.join(diff)
+    
+from pathlib import Path
+
+class Touch:
+    def exec(self, args):
+        #arg checking
+        if len(args) < 1:
+            raise ValueError("At least one argument is required for touch.")
+        
+        for file_path in args:
+            self._touch_file(file_path)
+    
+    def _touch_file(self, file_path):
+        path = Path(file_path)
+        path.touch(exist_ok=True)
 
 class UnsafeWrapper(Application):
     def __init__(self, app):
@@ -311,6 +383,9 @@ class ApplicationFactory:
             "uniq": Uniq,
             "sort": Sort,
             "cut": Cut,
+            "wc": Wc,
+            "diff": Diff,
+            "touch": Touch,
         }
 
         actual_name = app_name[1:] if app_name.startswith("_") else app_name
