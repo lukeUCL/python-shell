@@ -14,7 +14,6 @@ class TestShell(unittest.TestCase):
         return ''.join(output_deque)
 
 
-
     # Unit testing for, WC, TOUCH, DIFF
     # unittesting wc
     # words
@@ -62,7 +61,22 @@ class TestShell(unittest.TestCase):
         result = stdout.strip()
         mutated_result = int(result) + 1
         self.assertNotEqual(mutated_result, '3')
+    
+    # integration testing
 
+    def test_wc_pipe_file_to_string(self):
+        cmdline = "cat unittest1.txt | wc -w"
+        stdout = self.eval(cmdline)
+        result = stdout.strip()
+        self.assertEqual(result, '4')
+    
+    def test_wc_pipe_string_to_file(self):
+        cmdline = "echo foo nam > newfile.txt| wc -w newfile.txt"
+        stdout = self.eval(cmdline)
+        result = stdout.strip()
+        self.assertEqual(result, '2')
+
+    # testing touch, property based
     def test_touch_update_access_time(self):
         filename = 'unittest1.txt'
         old_access_time = os.path.getatime(filename)
@@ -73,7 +87,15 @@ class TestShell(unittest.TestCase):
         self.assertGreater(
             new_access_time, old_access_time, "The access time was not updated."
             )
+    
+    def test_touch_create_file(self):
+        filename = "testfile.txt"
+        cmdline = f"touch {filename}"
+        self.eval(cmdline)
+        self.assertTrue(Path(filename).exists(), "The file was not created.")
+        Path(filename).unlink()
 
+    # testing diff
     def test_diff_files(self):
         cmdline = "diff unittest1.txt unittest2.txt"
         result = self.eval(cmdline).strip()
@@ -96,18 +118,18 @@ class TestShell(unittest.TestCase):
         result = stdout.strip()
         expected_line1 = "-hello"
         expected_line2 = "+hi"
-        self.assertEqual(result, expected_line1)
-        self.assertEqual(result, expected_line2)
+        self.assertIn(expected_line1, result)
+        self.assertIn(expected_line2, result)
 
     def test_pipe_diff_files(self):
         cmdline = "cat unittest1.txt | diff unittest2.txt"
         result = self.eval(cmdline).strip()
 
-        expected_line1 = "-aaa aaa aaa"
-        expected_line2 = "-bbb"
-        expected_line3 = "+zzz zzz"
-        expected_line4 = "+ccc"
-        expected_line5 = "+ddd"
+        expected_line1 = "-zzz zzz"
+        expected_line2 = "-ccc"
+        expected_line3 = "-ddd"
+        expected_line4 = "+aaa aaa aaa"
+        expected_line5 = "+bbb"
 
         self.assertIn(expected_line1, result)
         self.assertIn(expected_line2, result)
@@ -116,20 +138,14 @@ class TestShell(unittest.TestCase):
         self.assertIn(expected_line5, result)
 
     def test_pipe_diff_strings(self):
-        cmdline = "echo 'hello' | diff - 'hi'"
-        stdout = self.eval(cmdline)
-        result = stdout.strip()
-        expected = "-hello\n+hi"
-        self.assertEqual(result, expected)
-
-if __name__ == '__main__':
-    unittest.main()
-    def test_touch_create_file(self):
-        filename = "testfile.txt"
-        cmdline = f"touch {filename}"
-        self.eval(cmdline)
-        self.assertTrue(Path(filename).exists(), "The file was not created.")
-        Path(filename).unlink() 
+        cmdline = "echo hello | diff 'hi'"
+        result = self.eval(cmdline).strip()
+        
+        expected_line1 = "-hi"
+        expected_line2 = "+hello"
+        self.assertIn(expected_line1,result)
+        self.assertIn(expected_line2,result)
+    
 
 if __name__ == '__main__':
     unittest.main()

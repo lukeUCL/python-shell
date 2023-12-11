@@ -348,7 +348,8 @@ class Wc(Application):
             return source
 
     def countLines(self, content):
-        return content.count('\n')
+        return content.count('\n') if\
+            content.count('\n') > 0 else 1
 
     def countWords(self, content):
         return len(content.split())
@@ -373,12 +374,15 @@ class Diff:
         if os.path.isfile(source):
             with open(source, 'r') as file:
                 return file.readlines(), source
-        # handle string case
         else:
-            return source.splitlines(), "string_input"
+            # account for piped strings passed with \n
+            lines = source.split('\n')
+            lines = [line + '\n' for line in lines if line]
+            return lines, "string_input"
 
     # also printing file names now
     def computeDiff(self, content1, content2, fromfile, tofile):
+
         diff = difflib.unified_diff(
             content1, content2, fromfile=fromfile, tofile=tofile, lineterm=''
         )
