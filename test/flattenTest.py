@@ -7,7 +7,6 @@ import unittest
 # paths were forced to run, NOT unit tests
 # just for checking outputs
 
-
 def parse_command(input_command):
     input_stream = InputStream(input_command)
     lexer = ShellLexer(input_stream)

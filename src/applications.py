@@ -410,6 +410,28 @@ class Touch:
         path.touch(exist_ok=True)
 
 
+class Mkdir(Application):
+    def exec(self, args):
+        if len(args) != 1:
+            # no arg given
+            raise ValueError("Wrong number of command line arguments")
+
+        directory_name = args[0]
+        os.makedirs(directory_name)
+        # dont throw command line error
+        return ""
+
+
+class Rmdir(Application):
+    def exec(self, args):
+        if len(args) != 1:
+            raise ValueError("wrong number of command line arguments")
+
+        directory_name = args[0]
+        os.rmdir(directory_name)
+        return ""
+
+
 class UnsafeWrapper(Application):
     def __init__(self, app):
         self._app = app
@@ -440,6 +462,8 @@ class ApplicationFactory:
             "wc": Wc,
             "diff": Diff,
             "touch": Touch,
+            "mkdir": Mkdir,
+            "rmdir": Rmdir
         }
 
         actual_name = app_name[1:] if app_name.startswith("_") else app_name

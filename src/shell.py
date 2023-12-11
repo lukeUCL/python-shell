@@ -13,29 +13,32 @@ def expandGlob(commandLine):
     flat = not isinstance(commandLine[0], list)
 
     if not flat:
-        pass
-    else:
-        if commandLine[0] == 'find':
-            pass
-        else:
-            for i, arg in enumerate(commandLine):
-                if '*' in arg or '?' in arg:
+        for i, sub_command in enumerate(commandLine):
+            for j, arg in enumerate(sub_command):
+                if commandLine[i][0] != 'find' and ('*' in arg or '?' in arg):
                     rep = glob(arg)
-                    commandLine[i] = '\n'.join(rep).strip('\n')
-
+                    commandLine[i][j] = '\n'.join(rep).strip('\n')
+    else:
+        for i, arg in enumerate(commandLine):
+            if commandLine[0] != 'find' and ('*' in arg or '?' in arg):
+                rep = glob(arg)
+                commandLine[i] = '\n'.join(rep).strip('\n')
     return commandLine
 
 
 def run(input_command):
+    # lex, parse, convert tree
+    # glob (not edge cases)
+    # call commands
     input_stream = InputStream(input_command)
     lexer = ShellLexer(input_stream)
     token_stream = CommonTokenStream(lexer)
     parser = ShellParser(token_stream)
     parse_tree = parser.command()
-
     visitor = parseTreeFlattener()
     flattened = visitor.visit(parse_tree)
     flattened = expandGlob(flattened)
+
     output = deque()
     evalCommand(flattened, output)
     return output
