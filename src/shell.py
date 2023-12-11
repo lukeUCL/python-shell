@@ -6,8 +6,8 @@ from parseTreeFlattener import parseTreeFlattener
 from Commands import evalCommand
 import sys
 import os
-from collections import deque
 from glob import glob
+
 
 def expandGlob(commandLine):
     flat = not isinstance(commandLine[0], list)
@@ -15,12 +15,16 @@ def expandGlob(commandLine):
     if not flat:
         pass
     else:
-        for i, arg in enumerate(commandLine):
-            if '*' in arg or '?' in arg:
-                rep = glob(arg)
-                commandLine[i]='\n'.join(rep).strip('\n')
+        if commandLine[0] == 'find':
+            pass
+        else:
+            for i, arg in enumerate(commandLine):
+                if '*' in arg or '?' in arg:
+                    rep = glob(arg)
+                    commandLine[i] = '\n'.join(rep).strip('\n')
 
     return commandLine
+
 
 def run(input_command):
     input_stream = InputStream(input_command)
@@ -33,9 +37,9 @@ def run(input_command):
     flattened = visitor.visit(parse_tree)
     flattened = expandGlob(flattened)
     output = deque()
-    evalCommand(flattened,output)
+    evalCommand(flattened, output)
     return output
-    
+
 
 if __name__ == "__main__":
     args_num = len(sys.argv) - 1

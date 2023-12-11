@@ -1,15 +1,19 @@
 from applications import ApplicationFactory
 
+
 class Command:
     def execute(self, args, output):
         raise NotImplementedError("for subclasses ( not called here)")
+
 
 def evalCommand(flattened, output):
     if isinstance(flattened[0], list):
         intermediate = []
         for part in flattened:
             if part[0] == 'seq':
-                intermediate.extend(SeqCommand().execute(part[1:], output, store=True))
+                intermediate.extend(
+                    SeqCommand().execute(part[1:], output, store=True)
+                )
             elif part[0] == 'pipe':
                 part[1].extend(intermediate)
                 SeqCommand().execute(part[1:], output)
@@ -29,41 +33,51 @@ def getArgs(command):
     else:
         app_args = command[1:]
     return app_name, app_args, redirections
-    
+
+
 def handleRedirections(app_instance, app_args, redirections, output):
 
     if redirections:
-        if not redirections['out']==None:
+        if redirections['out']:
             with open(redirections['out'], 'w') as file:
                 file.write(app_instance.exec(app_args))
-        elif not redirections['in']==None:
+        elif redirections['in']:
             app_args.append(redirections['in'])
             output.append(app_instance.exec(app_args))
 
     return output, app_args
 
+
 def processCommand(app_instance, app_args, output):
-    output.append(app_instance.exec(app_args))    
+    output.append(app_instance.exec(app_args))
     return output
+
 
 class SeqCommand(Command):
     def execute(self, args, output, store=False):
-        #store flag for passing seqs to pipes
+        # store flag for passing seqs to pipes
         app_factory = ApplicationFactory()
-        result_list = [] if store else output  # Use a single list to store command results
+        intermediate_output = [] if store else output
 
         for command in args:
             app_name, app_args, redirections = getArgs(command)
             app_instance = app_factory.create_application(app_name)
 
             if redirections:
-                result_list, app_args = handleRedirections(app_instance, app_args, redirections, result_list)
+                intermediate_output, app_args =\
+                    handleRedirections(
+                        app_instance, app_args,
+                        redirections, intermediate_output
+                    )
             else:
-                result_list = processCommand(app_instance, app_args, result_list)
+                intermediate_output = processCommand(
+                        app_instance, app_args, intermediate_output
+                    )
 
-        #explicit return stops from writing to out
+        # explicit return stops from writing to out
         if store:
-            return result_list
+            return intermediate_output
+
 
 class PipeCommand(Command):
     def execute(self, args, output):
@@ -74,20 +88,27 @@ class PipeCommand(Command):
             app_name, app_args, redirections = getArgs(command)
             app_instance = app_factory.create_application(app_name)
 
-            # Extend args with intermediate output for all but the first command
+            # Extend args with intermediate
+            # output for all but the first command
             if i > 0:
                 app_args.extend(intermediate_output)
                 intermediate_output = []
 
             # Handle redirections and execute command
             if redirections:
-                intermediate_output, app_args = handleRedirections(app_instance, app_args, redirections, intermediate_output)
+                intermediate_output, app_args = handleRedirections(
+                    app_instance, app_args, redirections, intermediate_output
+                    )
             else:
-                intermediate_output = processCommand(app_instance, app_args, intermediate_output)
+                intermediate_output = processCommand(
+                    app_instance, app_args, intermediate_output
+                )
 
-            # For the last command in the pipe, append the results to the main output
+            # For the last command in the pipe,
+            # append the results to the main output
             if i == len(args) - 1:
                 output.extend(intermediate_output)
+
 
 class CallCommand(Command):
     def execute(self, args, output):
@@ -95,10 +116,14 @@ class CallCommand(Command):
             app_factory = ApplicationFactory()
             app_name, app_args, redirections = getArgs(args)
             app_instance = app_factory.create_application(app_name)
-            
+
             if redirections:
-                handleRedirections(app_instance, app_args, redirections, output)
+                handleRedirections(
+                    app_instance, app_args, redirections, output
+                )
             else:
-                processCommand(app_instance, app_args, output)
+                processCommand(
+                    app_instance, app_args, output
+                )
         else:
             raise ValueError("No command given")

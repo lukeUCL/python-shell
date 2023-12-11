@@ -3,16 +3,22 @@ import re
 from abc import ABC, abstractmethod
 from os import listdir
 from collections import deque
+import glob
+import difflib
+from pathlib import Path
 
-class Application(ABC):  
+
+class Application(ABC):
 
     @abstractmethod
     def exec(self, args):
         pass
 
+
 class Pwd(Application):
     def exec(self, args):
         return os.getcwd()
+
 
 class Cd(Application):
     def exec(self, args):
@@ -21,11 +27,13 @@ class Cd(Application):
         os.chdir(args[0])
         return ""
 
-class Echo(Application):   
+
+class Echo(Application):
     def exec(self, args):
         return " ".join(args) + "\n"
-    
-class Ls(Application):   
+
+
+class Ls(Application):
     def exec(self, args):
         if len(args) == 0:
             ls_dir = os.getcwd()
@@ -33,23 +41,25 @@ class Ls(Application):
             ls_dir = args[0]
         else:
             raise ValueError("wrong number of command line arguments")
-        
+
         files = [f for f in listdir(ls_dir) if not f.startswith(".")]
         return "\n".join(files) + "\n"
-    
-class Cat(Application):   
+
+
+class Cat(Application):
     def exec(self, args):
         result = ""
         for a in args:
             with open(a) as f:
                 result += f.read()
         return result
- 
-class Head(Application):   
+
+
+class Head(Application):
     def exec(self, args):
         if len(args) != 1 and len(args) != 3:
             raise ValueError("wrong number of command line arguments")
-        
+
         if len(args) == 1:
             num_lines = 10
             file = args[0]
@@ -63,13 +73,14 @@ class Head(Application):
         with open(file) as f:
             lines = f.readlines()
             return "".join(lines[:min(len(lines), num_lines)])
-    
-class Tail(Application):   
+
+
+class Tail(Application):
     def exec(self, args):
-        #return 'here'
+
         if len(args) != 1 and len(args) != 3:
             raise ValueError("wrong number of command line arguments")
-        
+
         if len(args) == 1:
             num_lines = 10
             file = args[0]
@@ -85,11 +96,12 @@ class Tail(Application):
             display_length = min(len(lines), num_lines)
             return "".join(lines[len(lines) - display_length:])
 
-class Grep(Application):   
+
+class Grep(Application):
     def exec(self, args):
         if len(args) < 2:
             raise ValueError("wrong number of command line arguments")
-        
+
         pattern = args[0]
         input = args[1:]
         result = ""
@@ -107,12 +119,12 @@ class Grep(Application):
         if all(os.path.isfile(file) for file in input):
             for file in input:
                 with open(file, "r") as f:
-                    #check line by line 
+                    # check line by line
                     lines = f.readlines()
-                    #only need fileName when we have multiple files
+                    # only need fileName when we have multiple files
                     result += grep(lines, file=(len(input) > 1), filename=file)
 
-        #strings, just directly process
+        # strings, just directly process
         else:
             result = grep(input)
 
@@ -121,8 +133,11 @@ class Grep(Application):
 
 class Find(Application):
     def exec(self, args):
+
         out = deque()
+        # no prefix directory
         cwdRoot = False
+
         if len(args) > 3 or len(args) < 2:
             raise ValueError("wrong number of command line arguments")
         if len(args) == 2:
@@ -135,39 +150,56 @@ class Find(Application):
 
         if not os.path.isdir(path):
             raise ValueError("path is not a directory")
+
+        # recursive checking (see func below)
         self.search(path, pattern, out)
         if cwdRoot:
             res = deque()
             while len(out) > 0:
-                res.append('.' + out.pop()[len(os.getcwd()):])
-            out = res
-        return "".join(out)
-    
+                res.appendleft('.' + out.pop()[len(os.getcwd()):])
+
+            out.extend(res)
+
+        path_list = [item for item in out if item != '.']
+        return '\n'.join(path_list)
+
     def search(self, path, pattern, out):
         if not os.path.isdir(path):
             raise ValueError("path is not a directory")
+
+        # check for globbing
+        if "*" in pattern or "?" in pattern:
+            glob_check = str(os.path.join(path, pattern))
+            # glob path/pattern, join by \n
+            matches = glob.glob(glob_check)
+            mlist = '\n'.join(matches).strip('\n')
+            out.extend(mlist.split('\n'))
+
+        # check every directory recursively
         for file in os.listdir(path):
             if os.path.isdir(os.path.join(path, file)):
                 self.search(os.path.join(path, file), pattern, out)
             else:
-                if file == pattern or (pattern[0:2] == "'*" and file.endswith(pattern[1:-1])):
+                # base case, we found a match
+                if file == pattern or file.endswith(pattern[1:-1]):
                     out.append(os.path.join(path, file))
+
 
 class Uniq(Application):
     def exec(self, args):
         out = deque()
         if len(args) > 2 or len(args) < 1:
-            raise ValueError("wrong number of command line arguments")  
+            raise ValueError("wrong number of command line arguments")
         if args[0] == '-i':
-            ignoreCase=True
+            ignoreCase = True
         else:
-            ignoreCase=False
+            ignoreCase = False
         input_source = args[-1]
 
         def process_line(line, last_line):
             normalized_line = line.lower() if ignoreCase else line
             if normalized_line != last_line:
-                #split by \n in pipe strings 
+                # split by \n in pipe strings
                 out.append(line if line.endswith('\n') else line + '\n')
                 return normalized_line
             return last_line
@@ -184,9 +216,10 @@ class Uniq(Application):
 
         return ''.join(out)
 
-#some hardcoding here..? when we have -b 1, with a string, we should return 0 index, not 1 index so code doesnt work - just changred it to 
-#option-1..?
 
+# string handling vs file handling - for file,
+# byte 1 is first element, for strings,
+# byte 0 is first element
 class Cut(Application):
 
     def exec(self, args):
@@ -198,57 +231,57 @@ class Cut(Application):
             raise ValueError("incorrect input")
         options = options[1].split(',')
 
-
         def cutProcess(input, File):
             if File:
                 input = open(input)
-             
-            #for strings passed by pipe, we want to consider each string as a single element, so we'll nest them 
+
+            # for strings passed by pipe, we want to consider each
+            # string as a single element, so we'll nest them
             else:
                 input = [[segment] for segment in input.split('\n')]
-                #remove empty string
+                # remove empty string
                 input = input[:-1]
 
             for line in input:
-
                 overlapStart = False
                 for option in options:
                     index = option.find('-')
                     if index != -1:
                         if option[0] == '-':
-                                for elem in line[:int(option[1:])]:
-                                    out.append(elem + '\n')
+                            for elem in line[:int(option[1:])]:
+                                out.append(elem + '\n')
                         elif option[-1] == '-' and not overlapStart:
                             overlapStart = True
                             for elem in line[int(option[:-1]) - 1:]:
                                 out.append(elem)
-                        elif option[-1] != '-':#option is specifcying a range
-                            out.append(line[int(option[:index]) - 1:int(option[index + 1:])] + '\n')
-                    else:#just wants those specific bytes
+                        # option is specifying a range
+                        elif option[-1] != '-':
+                            out.append(
+                                line[int(option[:index]) - 1:
+                                    int(option[index + 1:])] + '\n'
+                            )
+                    # just wants those specific bytes
+                    else:
                         if not File:
-                            #adjust bytes to string index
+                            # adjust bytes to string index
                             option = str(int(option) - 1)
-                            #extract string from square brackets
+                            # extract string from square brackets
                             line = line[0]
                         out.append(line[int(option)] + '\n')
-                #out.append(toAdd)
             return "".join(out)
 
-        #when we split the input(string) it will be a list, i,e .split('\n') -> 'abc' -> ['abc', '']
-        #this caused issues with particualar bytes, so we will just take the string at that section
-
-        if os.path.isfile(input): 
+        if os.path.isfile(input):
             return cutProcess(input, True)
         else:
             return cutProcess(input, False)
-        
+
 
 class Sort(Application):
     def exec(self, args):
         out = deque()
         if len(args) > 2:
             raise ValueError("wrong number of command line arguments")
-        
+
         reverse = (args[0] == "-r")
 
         if reverse and len(args) == 2:
@@ -257,35 +290,45 @@ class Sort(Application):
             input = args[0]
         else:
             raise ValueError("wrong number of command line arguments")
-        
+
         res = []
-        
-        def sortInput(input,File):
+
+        # add lines, sort, reverse(?), append to out
+        # add \n if we need
+        def sortInput(input, File):
             for line in input:
                 res.append(line)
             res.sort()
             if reverse:
                 res.reverse()
             for elem in res:
+                # newline for strings which were split by
+                # newline earlier
                 out.append(elem) if File else out.append(elem+'\n')
             return "".join(out)
-            
+
         if os.path.isfile(input):
             input = open(input, "r")
-            return sortInput(input,File=True)
+            return sortInput(input, File=True)
         else:
             input = input.split('\n')
-            return sortInput(input,File=False)
+            return sortInput(input, File=False)
+
 
 class Wc(Application):
 
     def exec(self, args):
         if len(args) != 2:
-            raise ValueError("wc expects exactly one argument for file or string input")
+            raise ValueError(
+                "wc expects exactly one argument for file or string input"
+            )
 
         option, input_source = args
         if option not in ['-l', '-w', '-c']:
-            raise ValueError("wc expects an option -l (lines), -w (words), or -c (characters)")
+            raise ValueError(
+                "wc expects an option -l (lines),\
+                    -w (words), or -c (characters)"
+            )
 
         if os.path.isfile(input_source):
             with open(input_source, 'r') as file:
@@ -293,6 +336,7 @@ class Wc(Application):
         else:
             content = input_source
 
+        # lines, words, char counting
         if option == '-l':
             return str(self.countLines(content))
         elif option == '-w':
@@ -301,8 +345,7 @@ class Wc(Application):
             return str(self.countChars(content))
 
     def countLines(self, content):
-        a= content.count('\n')
-        print(a)
+        return(content.count('\n'))
 
     def countWords(self, content):
         return len(content.split())
@@ -310,15 +353,14 @@ class Wc(Application):
     def countChars(self, content):
         return len(content)
 
-import difflib
 
 class Diff:
     def exec(self, args):
-        #arg checking
+        # arg checking
         if len(args) != 2:
             raise ValueError("Two arguments are required for diff.")
-        
-        #content to compare
+
+        # content to compare
         content1 = self.getContent(args[0])
         content2 = self.getContent(args[1])
 
@@ -329,7 +371,7 @@ class Diff:
         if os.path.isfile(source):
             with open(source, 'r') as file:
                 return file.readlines()
-        #string case
+        # string case
         else:
             return source.splitlines()
 
@@ -340,21 +382,21 @@ class Diff:
 
     def join(self, diff):
         return '\n'.join(diff)
-    
-from pathlib import Path
+
 
 class Touch:
     def exec(self, args):
-        #arg checking
+        # arg checking
         if len(args) < 1:
             raise ValueError("At least one argument is required for touch.")
-        
+
         for file_path in args:
             self._touch_file(file_path)
-    
+
     def _touch_file(self, file_path):
         path = Path(file_path)
         path.touch(exist_ok=True)
+
 
 class UnsafeWrapper(Application):
     def __init__(self, app):
@@ -391,6 +433,8 @@ class ApplicationFactory:
         actual_name = app_name[1:] if app_name.startswith("_") else app_name
         if actual_name not in app_types:
             raise ValueError(f"Invalid application name: {app_name}")
-        
+
+        # call unsafe for _ prefix
         app_instance = app_types[actual_name]()
-        return UnsafeWrapper(app_instance) if app_name.startswith("_") else app_instance
+        return UnsafeWrapper(app_instance)\
+            if app_name.startswith("_") else app_instance
