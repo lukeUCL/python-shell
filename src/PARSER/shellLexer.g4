@@ -1,4 +1,4 @@
-lexer grammar shellLexer;
+lexer grammar ShellLexer;
 
 CONCAT_ARG : UNQUOTED DOUBLE_QUOTED_TEXT UNQUOTED 
            | UNQUOTED DOUBLE_QUOTED_TEXT 

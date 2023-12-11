@@ -256,10 +256,10 @@ class Cut(Application):
                                 out.append(elem)
                         # option is specifying a range
                         elif option[-1] != '-':
-                            out.append(
-                                line[int(option[:index]) - 1:
-                                    int(option[index + 1:])] + '\n'
-                            )
+                            start_index = int(option[:index]) - 1
+                            end_index = int(option[index + 1:])
+                            line_slice = line[start_index:end_index] + '\n'
+                            out.append(line_slice)
                     # just wants those specific bytes
                     else:
                         if not File:
@@ -324,19 +324,15 @@ class Wc(Application):
             )
 
         option, input_source = args
+        # lines, words, chars opts
         if option not in ['-l', '-w', '-c']:
             raise ValueError(
                 "wc expects an option -l (lines),\
                     -w (words), or -c (characters)"
             )
 
-        if os.path.isfile(input_source):
-            with open(input_source, 'r') as file:
-                content = file.read()
-        else:
-            content = input_source
+        content = self.getContent(input_source)
 
-        # lines, words, char counting
         if option == '-l':
             return str(self.countLines(content))
         elif option == '-w':
@@ -344,8 +340,15 @@ class Wc(Application):
         elif option == '-c':
             return str(self.countChars(content))
 
+    def getContent(self, source):
+        if os.path.isfile(source):
+            with open(source, 'r') as file:
+                return file.read()  # read as single string
+        else:
+            return source
+
     def countLines(self, content):
-        return(content.count('\n'))
+        return content.count('\n')
 
     def countWords(self, content):
         return len(content.split())
@@ -356,31 +359,33 @@ class Wc(Application):
 
 class Diff:
     def exec(self, args):
-        # arg checking
+        # args checking
         if len(args) != 2:
             raise ValueError("Two arguments are required for diff.")
 
-        # content to compare
-        content1 = self.getContent(args[0])
-        content2 = self.getContent(args[1])
+        content1, fromfile = self.getContent(args[0])
+        content2, tofile = self.getContent(args[1])
 
-        diff = self.computeDiff(content1, content2)
+        diff = self.computeDiff(content1, content2, fromfile, tofile)
         return self.join(diff)
 
     def getContent(self, source):
         if os.path.isfile(source):
             with open(source, 'r') as file:
-                return file.readlines()
-        # string case
+                return file.readlines(), source
+        # handle string case
         else:
-            return source.splitlines()
+            return source.splitlines(), "string_input"
 
-    def computeDiff(self, content1, content2):
-        # difflib to check file diff
-        diff = difflib.unified_diff(content1, content2, lineterm='')
+    # also printing file names now
+    def computeDiff(self, content1, content2, fromfile, tofile):
+        diff = difflib.unified_diff(
+            content1, content2, fromfile=fromfile, tofile=tofile, lineterm=''
+        )
         return list(diff)
 
     def join(self, diff):
+        # joining diff output into single string
         return '\n'.join(diff)
 
 
@@ -392,6 +397,9 @@ class Touch:
 
         for file_path in args:
             self._touch_file(file_path)
+
+        # dont throw command line error
+        return ''
 
     def _touch_file(self, file_path):
         path = Path(file_path)

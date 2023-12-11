@@ -1,4 +1,4 @@
-# Generated from shellLexer.g4 by ANTLR 4.13.1
+# Generated from ShellLexer.g4 by ANTLR 4.13.1
 from antlr4 import *
 from io import StringIO
 import sys
@@ -54,7 +54,7 @@ def serializedATN():
         0,0,9,0,53,68,73,80,92,101,109,111,1,6,0,0
     ]
 
-class shellLexer(Lexer):
+class ShellLexer(Lexer):
 
     atn = ATNDeserializer().deserialize(serializedATN())
 
@@ -91,7 +91,7 @@ class shellLexer(Lexer):
                   "BACK_QUOTE", "UNQUOTED", "WS", "NEWLINE", "PIPE", "SEMI", 
                   "SINGLE_QUOTED_TEXT", "BACK_QUOTED_TEXT", "DOUBLE_QUOTED_TEXT" ]
 
-    grammarFileName = "shellLexer.g4"
+    grammarFileName = "ShellLexer.g4"
 
     def __init__(self, input=None, output:TextIO = sys.stdout):
         super().__init__(input, output)

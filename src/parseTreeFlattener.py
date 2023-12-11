@@ -36,7 +36,7 @@ class parseTreeFlattener(ShellParserVisitor):
                 # replace with spaces
                 substitution_output_str = ''.join(
                     substitution_output_deque
-                ).replace('\n', ' ').strip()
+                    ).replace('\n', ' ').strip()
 
                 result += pre_text + substitution_output_str
                 text = post_text
@@ -148,7 +148,7 @@ class parseTreeFlattener(ShellParserVisitor):
             raise ValueError("Command not found in callCommand context")
 
         full_command = [command] + arguments
-        # dead if statemnt?
+
         if redirection['in'] or redirection['out']:
             full_command.append(redirection)
 

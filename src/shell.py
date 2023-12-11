@@ -1,6 +1,6 @@
 from antlr4 import InputStream, CommonTokenStream
 from collections import deque
-from PARSER.ShellLexer import shellLexer
+from PARSER.ShellLexer import ShellLexer
 from PARSER.ShellParser import ShellParser
 from parseTreeFlattener import parseTreeFlattener
 from Commands import evalCommand
@@ -28,7 +28,7 @@ def expandGlob(commandLine):
 
 def run(input_command):
     input_stream = InputStream(input_command)
-    lexer = shellLexer(input_stream)
+    lexer = ShellLexer(input_stream)
     token_stream = CommonTokenStream(lexer)
     parser = ShellParser(token_stream)
     parse_tree = parser.command()

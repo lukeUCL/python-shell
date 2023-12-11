@@ -1,11 +1,8 @@
-import sys
-sys.path.insert(0, '/Users/lukemciver/softwareEng/src')
-sys.path.insert(0, '/Users/lukemciver/softwareEng/src/shell')
-
-from collections import deque
 import unittest
 from shell import run
-
+from pathlib import Path
+from time import sleep
+import os
 # Inside your TestShell class, you'll modify or add a new method to use your run function
 class TestShell(unittest.TestCase):
 
@@ -15,19 +12,124 @@ class TestShell(unittest.TestCase):
         output_deque = run(cmdline)
         # Convert deque to string if necessary  
         return ''.join(output_deque)
+
+
+
+    # Unit testing for, WC, TOUCH, DIFF
+    # unittesting wc
+    # words
+    def test_wc_word_count(self):
+        cmdline = "wc -w 'one two three'"
+        stdout = self.eval(cmdline)
+        result = stdout.strip()
+        self.assertEqual(result, '3')
     
-    #new funcs testing
-    def test_wc(self):
-        cmdline = 'wc -w "gi gi gi"'
+    # lines
+    def test_wc_line_count(self):
+        cmdline = "wc -l 'one two three'"
         stdout = self.eval(cmdline)
         result = stdout.strip()
-        self.assertEqual(result, "abc")
-
-    def test_substitution(self):
-        cmdline = "echo `echo foo`"
+        self.assertEqual(result, '1')
+    
+    # chars
+    def test_wc_char_count(self):
+        cmdline = "wc -c 'one two three'"
         stdout = self.eval(cmdline)
         result = stdout.strip()
-        self.assertEqual(result, "foo")
+        self.assertEqual(result, '13')
 
-    if __name__ == "__main__":
-        unittest.main()
+    # file
+    def test_wc_word_count(self):
+        cmdline = "wc -w unittest1.txt"
+        stdout = self.eval(cmdline)
+        result = stdout.strip()
+        self.assertEqual(result, '4')
+
+    # property based testing
+    def test_wc_word_property(self):
+        input_str = 'one two three'
+        cmdline = f"wc -w '{input_str}'"
+        stdout = self.eval(cmdline)
+        result = stdout.strip()
+        # only count the words in the input string
+        word_count = len(input_str.split())
+        self.assertEqual(result, str(word_count))
+
+    # mutation testing
+    def test_wc_word_count_mutation(self):
+        cmdline = "wc -w 'one two three'"
+        stdout = self.eval(cmdline)
+        result = stdout.strip()
+        mutated_result = int(result) + 1
+        self.assertNotEqual(mutated_result, '3')
+
+    def test_touch_update_access_time(self):
+        filename = 'unittest1.txt'
+        old_access_time = os.path.getatime(filename)
+        sleep(1) # Sleep for 1 second to ensure the access time is different
+        cmdline = f"touch {filename}"
+        self.eval(cmdline)  
+        new_access_time = os.path.getatime(filename)
+        self.assertGreater(
+            new_access_time, old_access_time, "The access time was not updated."
+            )
+
+    def test_diff_files(self):
+        cmdline = "diff unittest1.txt unittest2.txt"
+        result = self.eval(cmdline).strip()
+
+        expected_line1 = "-aaa aaa aaa"
+        expected_line2 = "-bbb"
+        expected_line3 = "+zzz zzz"
+        expected_line4 = "+ccc"
+        expected_line5 = "+ddd"
+
+        self.assertIn(expected_line1, result)
+        self.assertIn(expected_line2, result)
+        self.assertIn(expected_line3, result)
+        self.assertIn(expected_line4, result)
+        self.assertIn(expected_line5, result)
+    
+    def test_diff_strings(self):
+        cmdline = "diff 'hello' 'hi'"
+        stdout = self.eval(cmdline)
+        result = stdout.strip()
+        expected_line1 = "-hello"
+        expected_line2 = "+hi"
+        self.assertEqual(result, expected_line1)
+        self.assertEqual(result, expected_line2)
+
+    def test_pipe_diff_files(self):
+        cmdline = "cat unittest1.txt | diff unittest2.txt"
+        result = self.eval(cmdline).strip()
+
+        expected_line1 = "-aaa aaa aaa"
+        expected_line2 = "-bbb"
+        expected_line3 = "+zzz zzz"
+        expected_line4 = "+ccc"
+        expected_line5 = "+ddd"
+
+        self.assertIn(expected_line1, result)
+        self.assertIn(expected_line2, result)
+        self.assertIn(expected_line3, result)
+        self.assertIn(expected_line4, result)
+        self.assertIn(expected_line5, result)
+
+    def test_pipe_diff_strings(self):
+        cmdline = "echo 'hello' | diff - 'hi'"
+        stdout = self.eval(cmdline)
+        result = stdout.strip()
+        expected = "-hello\n+hi"
+        self.assertEqual(result, expected)
+
+if __name__ == '__main__':
+    unittest.main()
+    def test_touch_create_file(self):
+        filename = "testfile.txt"
+        cmdline = f"touch {filename}"
+        self.eval(cmdline)
+        self.assertTrue(Path(filename).exists(), "The file was not created.")
+        Path(filename).unlink() 
+
+if __name__ == '__main__':
+    unittest.main()
