@@ -39,19 +39,34 @@ class Ls(Application):
             ls_dir = os.getcwd()
         elif len(args) == 1:
             ls_dir = args[0]
+            if not os.path.exists(ls_dir):
+                raise FileNotFoundError(f"No such file or directory: '{ls_dir}'")
+            if not os.path.isdir(ls_dir):
+                raise NotADirectoryError(f"Not a directory: '{ls_dir}'")
         else:
             raise ValueError("wrong number of command line arguments")
 
-        files = [f for f in listdir(ls_dir) if not f.startswith(".")]
+        files = [f for f in os.listdir(ls_dir) if not f.startswith(".")]
         return "\n".join(files) + "\n"
-
 
 class Cat(Application):
     def exec(self, args):
         result = ""
+        error_messages = []
         for a in args:
-            with open(a) as f:
-                result += f.read()
+            try:
+                with open(a) as f:
+                    file_content = f.read()
+                    if not file_content.strip():  # Check if the file content is empty
+                        error_messages.append(f"Error: Empty file '{a}' detected")
+                    else:
+                        result += file_content
+            except FileNotFoundError:
+                error_messages.append(f"Error: File '{a}' not found")
+            except Exception as e:
+                error_messages.append(f"Error reading file '{a}': {str(e)}")
+        if error_messages:
+            return '\n'.join(error_messages)
         return result
 
 
