@@ -23,6 +23,7 @@ def expandGlob(commandLine):
             if commandLine[0] != 'find' and ('*' in arg or '?' in arg):
                 rep = glob(arg)
                 commandLine[i] = '\n'.join(rep).strip('\n')
+
     return commandLine
 
 

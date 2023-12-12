@@ -228,8 +228,6 @@ class ShellParser ( Parser ):
                 return visitor.visitChildren(self)
 
 
-
-
     def seqCommand(self):
 
         localctx = ShellParser.SeqCommandContext(self, self._ctx, self.state)
