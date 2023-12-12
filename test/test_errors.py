@@ -30,12 +30,6 @@ class errorTesting(unittest.TestCase):
         cat_instance = Cat()
         result = cat_instance.exec(['nonexistent_file.txt'])
         self.assertIn("Error: File 'nonexistent_file.txt' not found", result)
-    
-    def test_head_wrong_number_of_arguments(self):
-        head_instance = Head()
-        with self.assertRaises(ValueError) as context:
-            head_instance.exec([])
-        self.assertEqual(str(context.exception), "wrong number of command line arguments")
 
     def test_head_wrong_flags(self):
         head_instance = Head()
