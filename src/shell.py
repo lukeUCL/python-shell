@@ -23,7 +23,7 @@ def expandGlob(commandLine):
             if commandLine[0] != 'find' and ('*' in arg or '?' in arg):
                 rep = glob(arg)
                 commandLine[i] = '\n'.join(rep).strip('\n')
-
+                
     return commandLine
 
 
@@ -44,30 +44,21 @@ def run(input_command):
     evalCommand(flattened, output)
     return output
 
-
 if __name__ == "__main__":
-    args_num = len(sys.argv) - 1
-    if args_num > 0:
-        if args_num != 2:
-            raise ValueError("wrong number of command line arguments")
-        if sys.argv[1] != "-c":
-            raise ValueError(f"unexpected command line argument {sys.argv[1]}")
-        output = run(sys.argv[2])
-        while len(output) > 0:
-            print(output.popleft(), end="")
+    if len(sys.argv) == 3 and sys.argv[1] == "-c":
+        for output in run(sys.argv[2]):
+            print(output, end="")
     else:
         while True:
             try:
-                cmdline = input(os.getcwd() + "> ")
-                if cmdline.strip() == 'exit':
+                cmdline = input(os.getcwd() + "> ").strip()
+                if cmdline == 'exit':
                     break
-                output = run(cmdline)
-                while len(output) > 0:
-                    print(output.popleft(), end="")
+                for output in run(cmdline):
+                    print(output, end="")
             except KeyboardInterrupt:
-                print()  # Print a newline character
-                continue  # Go back to the beginning of the loop
+                print()  # Handle Ctrl+C gracefully
             except EOFError:
-                break  # Exit the loop on EOF
+                break  # Handle EOF (Ctrl+D) gracefully
             except Exception as e:
                 print(f"An error occurred: {e}")

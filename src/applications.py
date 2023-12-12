@@ -263,8 +263,9 @@ class Cut(Application):
                     index = option.find('-')
                     if index != -1:
                         if option[0] == '-':
-                            for elem in line[:int(option[1:])]:
-                                out.append(elem + '\n')
+                            for elem in line[:int(option[1:])-1]:
+                                out.append(elem)
+                            out.append(line[int(option[1:])-1] + '\n')
                         elif option[-1] == '-' and not overlapStart:
                             overlapStart = True
                             for elem in line[int(option[:-1]) - 1:]:
@@ -278,10 +279,10 @@ class Cut(Application):
                     # just wants those specific bytes
                     else:
                         if not File:
-                            # adjust bytes to string index
-                            option = str(int(option) - 1)
                             # extract string from square brackets
                             line = line[0]
+                        # adjust bytes to string index
+                        option = str(int(option) - 1)
                         out.append(line[int(option)] + '\n')
             return "".join(out)
 
@@ -310,24 +311,23 @@ class Sort(Application):
 
         # add lines, sort, reverse(?), append to out
         # add \n if we need
-        def sortInput(input, File):
+        def sortInput(input):
             for line in input:
-                res.append(line)
+                res.append(line if line.endswith('\n') else line + '\n')
             res.sort()
             if reverse:
                 res.reverse()
             for elem in res:
                 # newline for strings which were split by
                 # newline earlier
-                out.append(elem) if File else out.append(elem+'\n')
+                out.append(elem) if elem.endswith('\n') else out.append(elem+'\n')
             return "".join(out)
 
         if os.path.isfile(input):
             input = open(input, "r")
-            return sortInput(input, File=True)
         else:
-            input = input.split('\n')
-            return sortInput(input, File=False)
+            input = [line for line in input.split('\n') if line.strip()]
+        return sortInput(input)
 
 
 class Wc(Application):

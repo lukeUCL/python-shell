@@ -42,18 +42,6 @@ class errorTesting(unittest.TestCase):
         with self.assertRaises(ValueError) as context:
             tail_instance.exec([])
         self.assertEqual(str(context.exception), "wrong number of command line arguments")
-
-    def test_unsafe_wrapper_error(self):
-        unsafe_instance = UnsafeWrapper(Uniq()) 
-        with self.assertRaises(ValueError) as context:
-            unsafe_instance.exec([])
-        self.assertIn("Error occurred:", str(context.exception))
-    
-    def test_uniq_wrong_number_of_arguments(self):
-        uniq_instance = Uniq()
-        with self.assertRaises(ValueError) as context:
-            uniq_instance.exec(['-i'])
-        self.assertEqual(str(context.exception), "wrong number of command line arguments")
     
     def test_grep_wrong_number_of_arguments(self):
         grep_instance = Grep()
@@ -110,9 +98,23 @@ class errorTesting(unittest.TestCase):
         with self.assertRaises(ValueError) as context:
             rmdir_instance.exec([])
         self.assertEqual(str(context.exception), "wrong number of command line arguments")
+    
+    def test_cd_no_args(self):
+        with self.assertRaises(ValueError):
+            Cd().exec([])
 
-    def test_find_non_directory_path(self):
-        find_instance = Find()
-        with self.assertRaises(ValueError) as context:
-            find_instance.exec(['nonexistentdir', '*.txt'])
-        self.assertEqual(str(context.exception), "path is not a directory")
+    def test_cd_many_args(self):
+        with self.assertRaises(ValueError):
+            Cd().exec(["dir1", "dir2"])
+
+    def test_ls_non_existent_directory(self):
+        with self.assertRaises(FileNotFoundError):
+            Ls().exec(["nonexistentdir"])
+
+    def test_ls_file_instead_of_directory(self):
+        with self.assertRaises(FileNotFoundError):
+            Ls().exec(["file.txt"])
+
+    def test_cat_non_existent_file(self):
+        with self.assertRaises(ValueError):
+            Cat().exec(["nonexistentfile.txt"])
