@@ -1,16 +1,18 @@
 import unittest
-from applications import *
 from pathlib import Path
 from shell import run
 from time import sleep
+import os
+
 
 class TestShell(unittest.TestCase):
 
     @classmethod
     def eval(cls, cmdline):
-        # Use your run function here, make sure it returns the output as a string
+        # Use your run function here, make
+        # sure it returns the output as a string
         output_deque = run(cmdline)
-        # Convert deque to string if necessary  
+        # Convert deque to string if necessary
         return ''.join(output_deque)
 
     def test_wc_line_count(self):
@@ -18,7 +20,7 @@ class TestShell(unittest.TestCase):
         stdout = self.eval(cmdline)
         result = stdout.strip()
         self.assertEqual(result, '1')
-    
+
     # chars
     def test_wc_char_count(self):
         cmdline = "wc -c 'one two three'"
@@ -50,15 +52,14 @@ class TestShell(unittest.TestCase):
         result = stdout.strip()
         mutated_result = int(result) + 1
         self.assertNotEqual(mutated_result, '3')
-    
-    # integration testing
 
+    # integration testing
     def test_wc_pipe_file_to_string(self):
         cmdline = "cat unittest1.txt | wc -w"
         stdout = self.eval(cmdline)
         result = stdout.strip()
         self.assertEqual(result, '4')
-    
+
     def test_wc_pipe_string_to_file(self):
         cmdline = "echo foo nam > newfile.txt| wc -w newfile.txt"
         stdout = self.eval(cmdline)
@@ -69,14 +70,15 @@ class TestShell(unittest.TestCase):
     def test_touch_update_access_time(self):
         filename = 'unittest1.txt'
         old_access_time = os.path.getatime(filename)
-        sleep(1) # Sleep for 1 second to ensure the access time is different
+        sleep(1)
         cmdline = f"touch {filename}"
-        self.eval(cmdline)  
+        self.eval(cmdline)
         new_access_time = os.path.getatime(filename)
         self.assertGreater(
-            new_access_time, old_access_time, "The access time was not updated."
+            new_access_time, old_access_time,
+            "The access time was not updated."
             )
-    
+
     def test_touch_create_file(self):
         filename = "testfile.txt"
         cmdline = f"touch {filename}"
@@ -100,7 +102,7 @@ class TestShell(unittest.TestCase):
         self.assertIn(expected_line3, result)
         self.assertIn(expected_line4, result)
         self.assertIn(expected_line5, result)
-    
+
     def test_diff_strings(self):
         cmdline = "diff 'hello' 'hi'"
         stdout = self.eval(cmdline)
@@ -129,12 +131,12 @@ class TestShell(unittest.TestCase):
     def test_pipe_diff_strings(self):
         cmdline = "echo hello | diff 'hi'"
         result = self.eval(cmdline).strip()
-        
+
         expected_line1 = "-hi"
         expected_line2 = "+hello"
-        self.assertIn(expected_line1,result)
-        self.assertIn(expected_line2,result)
-    
+        self.assertIn(expected_line1, result)
+        self.assertIn(expected_line2, result)
+
     def test_mkdir_and_rmdir(self):
         # Create directory
         cmdline = "mkdir temp_test_dir"
@@ -144,7 +146,8 @@ class TestShell(unittest.TestCase):
         # Remove directory
         cmdline = "rmdir temp_test_dir"
         self.eval(cmdline)
-        self.assertFalse(Path('temp_test_dir').exists()) 
+        self.assertFalse(Path('temp_test_dir').exists())
+
 
 if __name__ == "__main__":
     unittest.main()

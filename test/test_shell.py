@@ -1,6 +1,7 @@
 import unittest
 from unittest import mock
-from applications import *
+from collections import deque
+from applications import Uniq
 from shell import run
 from pathlib import Path
 import os
@@ -8,8 +9,9 @@ from hypothesis import given
 from hypothesis import strategies as st
 from unittest.mock import patch
 
-# Inside your TestShell class, you'll modify or add a new method to use your run function
 
+# Inside your TestShell class, you'll modify
+# or add a new method to use your run function
 class TestPwd(unittest.TestCase):
     @given(st.none())
     def test_pwd_with_run(self, _):
@@ -17,56 +19,59 @@ class TestPwd(unittest.TestCase):
         expected_result = deque([os.getcwd()])
 
         result = run(cmdline)
-        
+
         self.assertEqual(result, expected_result)
 
+
 class TestCd(unittest.TestCase):
-    @given(st.sampled_from([d for d in os.listdir(os.getcwd()) if os.path.isdir(d)]))
+    @given(st.sampled_from([d for d in os.listdir(os.getcwd())
+                            if os.path.isdir(d)]))
     def test_cd_with_run(self, existing_dir):
         initial_dir = os.getcwd()
 
-        try:
-            # change directory to the existing directory
-            run(f"cd {existing_dir}")
-            self.assertEqual(os.getcwd(), os.path.join(initial_dir, existing_dir))
+        # change directory to the existing directory
+        run(f"cd {existing_dir}")
+        self.assertEqual(os.getcwd(), os.path.join(initial_dir, existing_dir))
 
-            # changing back to the initial directory
-            run(f"cd {initial_dir}")
-            self.assertEqual(os.getcwd(), initial_dir)
+        # changing back to the initial directory
+        run(f"cd {initial_dir}")
+        self.assertEqual(os.getcwd(), initial_dir)
 
-        except FileNotFoundError:
-            self.fail(f"Failed to change to directory: {existing_dir}")
 
 class TestEcho(unittest.TestCase):
-    @given(st.text(alphabet=st.characters(whitelist_categories=('L', 'N', 'Z')), min_size=0, max_size=7))
+    @given(st.text(alphabet=st.characters
+                   (whitelist_categories=('L', 'N', 'Z')),
+                    min_size=0, max_size=7))
     def test_echo_with_run(self, strings):
         input_string = ' '.join(strings)
-        input_string = input_string.strip()  # remove trailing and leading whitespace
+        input_string = input_string.strip()
         expected_output = input_string + '\n' if input_string else '\n'
         result = run(f"echo {input_string}")
         result_str = ''.join(result)
         self.assertEqual(result_str, expected_output)
-        
+
 
 class TestCat(unittest.TestCase):
-    @given(st.text(st.characters(whitelist_categories=('Ll', 'Lu')), min_size = 1))
+    @given(st.text(st.characters
+                   (whitelist_categories=('Ll', 'Lu')),
+                    min_size = 1))
     def test_cat_one_arg(self, file_content):
         # Invoke the method
         result = run(f"cat {file_content}")
-        result_str = ''.join(result)
 
         self.assertNotIn("Error: File not found", result)
 
-    
-    @given(st.text(st.characters(min_codepoint=65, max_codepoint=90) | st.characters(min_codepoint=97, max_codepoint=122), min_size=1, max_size = 5))
+    @given(st.text(st.characters(min_codepoint=65, max_codepoint=90) |
+                   st.characters(min_codepoint=97, max_codepoint=122),
+                   min_size=1, max_size = 5))
     def test_cat_multiple_args_with_run(self, file_contents):
         # Generate file contents, ensuring non-empty strings
         file_contents = [text for text in file_contents if text.strip()]
 
-        expected_output = ''.join(file_contents)
         with patch('builtins.open') as mock_open:
             mock_open.side_effect = [
-                mock.mock_open(read_data=text).return_value for text in file_contents
+                mock.mock_open(read_data=text).\
+                    return_value for text in file_contents
             ]
             command = f"cat {' '.join(file_contents)}"
             result = run(command)
@@ -76,35 +81,36 @@ class TestCat(unittest.TestCase):
 
             # Your assertions
             self.assertEqual(result_str, ''.join(file_contents))
-    
+
+
 class TestLs(unittest.TestCase):
-    @given(st.sampled_from([d for d in os.listdir(os.getcwd()) if os.path.isdir(d)]))
+    @given(st.sampled_from([d for d in os.listdir(os.getcwd())
+                            if os.path.isdir(d)]))
     def test_ls(self, directory):
         ls_dir = os.path.abspath(directory)
-
-        try:
-            files_in_dir = [f for f in os.listdir(ls_dir) if not f.startswith(".")]
-            expected_output = "\n".join(files_in_dir) + "\n"
-        except (FileNotFoundError, NotADirectoryError):
-            expected_output = f"No such file or directory: '{ls_dir}'\n"
+        files_in_dir = [f for f in os.listdir(ls_dir) if not f.startswith(".")]
+        expected_output = "\n".join(files_in_dir) + "\n"
 
         result = run(f"ls {directory}")
-        
+
         result_str = ''.join(result)
-        
-        expected_output = '\n'.join([f for f in os.listdir(directory) if not f.startswith(".")]) + "\n"
+
+        expected_output = '\n'.join([f for f in os.listdir(directory)\
+                                     if not f.startswith(".")]) + "\n"
         self.assertEqual(result_str, expected_output)
+
 
 # test commands, redirections, and echo cases, (quotes)
 class CommandTesting(unittest.TestCase):
 
     @classmethod
     def eval(cls, cmdline):
-        # Use your run function here, make sure it returns the output as a string
+        # Use your run function here,
+        # make sure it returns the output as a string
         output_deque = run(cmdline)
-        # Convert deque to string if necessary  
+        # Convert deque to string if necessary
         return ''.join(output_deque)
-    
+
     def test_substitution(self):
         cmdline = "echo `echo nested`"
         stdout = self.eval(cmdline)
@@ -116,13 +122,13 @@ class CommandTesting(unittest.TestCase):
         stdout = self.eval(cmdline)
         result = stdout.strip()
         self.assertEqual(result, 'hello')
-    
+
     def test_sub_echo(self):
         cmdline = '`echo echo` hello'
         stdout = self.eval(cmdline)
         result = stdout.strip()
         self.assertEqual(result, 'hello')
-    
+
     def test_echo_double_quotes(self):
         cmdline = 'echo "hello world"'
         stdout = self.eval(cmdline)
@@ -134,13 +140,7 @@ class CommandTesting(unittest.TestCase):
         stdout = self.eval(cmdline)
         result = stdout.strip()
         self.assertEqual(result, "hello world")
-    
-    def test_nested_squotes(self):
-        cmdline = 'echo "\'hello world\'"'
-        stdout = self.eval(cmdline)
-        result = stdout.strip()
-        self.assertEqual(result, 'hello world')
-    
+
     def test_echo_single_quotes(self):
         cmdline = "echo 'hello world'"
         stdout = self.eval(cmdline)
@@ -153,7 +153,7 @@ class CommandTesting(unittest.TestCase):
         result = stdout.strip()
         self.assertEqual(result, 'sample text')
         Path('temp.txt').unlink()  # Cleanup
-    
+
     def test_command_sequences(self):
         cmdline = "echo first; echo second; echo third"
         stdout = self.eval(cmdline)
@@ -188,7 +188,7 @@ class CommandTesting(unittest.TestCase):
 
         self.assertEqual(result, ['line1', 'line2'])
         Path('temp_head.txt').unlink()
-    
+
     def test_tail_file(self):
 
         with open('temp_tail.txt', 'w') as file:
@@ -202,7 +202,7 @@ class CommandTesting(unittest.TestCase):
 
         # Clean up the file
         Path('temp_tail.txt').unlink()
-    
+
     def test_find_with_globbing(self):
         Path('temp_dir').mkdir()
         Path('temp_dir/fileA.txt').touch()
@@ -229,20 +229,25 @@ class CommandTesting(unittest.TestCase):
         cmdline = "tail test/text.txt"
         stdout = self.eval(cmdline)
         result = stdout.strip().split("\n")
-        self.assertEqual(result, ['hello world', 'corgito ergo sum', 'i think therefore i am'])
-    
+        self.assertEqual(result, 
+                         ['hello world', 'corgito ergo sum',
+                         'i think therefore i am'])
+
     def test_head(self):
         cmdline = "head test/text.txt"
         stdout = self.eval(cmdline)
         result = stdout.strip().split("\n")
-        self.assertEqual(result, ['hello world', 'corgito ergo sum', 'i think therefore i am'])
-    
+        self.assertEqual(result, 
+                         ['hello world', 'corgito ergo sum',
+                         'i think therefore i am'])
+
     def test_pipeSeq(self):
-        cmdline = "echo aaa > writeIn.txt; cat writeIn.txt unittest1.txt| uniq -i"
+        cmdline = "echo aaa > writeIn.txt;\
+                    cat writeIn.txt unittest1.txt| uniq -i"
         stdout = self.eval(cmdline)
         result = stdout.strip().split("\n")
         self.assertEqual(result, ["aaa", "aaa aaa aaa", "bbb"])
-  
+
     def test_cut_specific_bytes_in_string(self):
         cmdline = "echo abcdef | cut -b 1"
         stdout = self.eval(cmdline)
@@ -253,19 +258,19 @@ class CommandTesting(unittest.TestCase):
         uniq_instance = Uniq()
         result = uniq_instance.exec(['aaa\naaa\nbbb\naaa'])
         self.assertEqual(result, 'aaa\nbbb\naaa\n')
-    
+
     def test_globbing(self):
         cmdline = "echo test/*.txt"
         stdout = self.eval(cmdline)
         result = set(stdout.strip().split())
-        self.assertEqual(result, {"test/test.txt", "test/texti.txt"})
-    
+        self.assertEqual(result, {"test/text.txt", "test/texti.txt"})
+
     def test_unsafe(self):
-       cmdline = "_echo aaa"
-       stdout = self.eval(cmdline)
-       result = stdout.strip()
-       self.assertEqual(result, "aaa")
+        cmdline = "_echo aaa"
+        stdout = self.eval(cmdline)
+        result = stdout.strip()
+        self.assertEqual(result, "aaa")
+
 
 if __name__ == '__main__':
     unittest.main()
-

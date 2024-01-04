@@ -1,7 +1,6 @@
 import os
 import re
 from abc import ABC, abstractmethod
-from os import listdir
 from collections import deque
 import glob
 import difflib
